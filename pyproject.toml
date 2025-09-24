@@ -1,0 +1,16 @@
+[project]
+name = "hdx-geo-data-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = ["fastapi[standard]", "python-dotenv"]
+
+[dependency-groups]
+dev = ["pre-commit", "ruff", "taskipy"]
+
+[tool.taskipy.tasks]
+# uv run task app
+app = "fastapi dev app"
+export = "uv sync -q && uv export -o requirements.txt -q --no-dev --no-emit-project --no-hashes && uv export -o requirements-dev.txt -q --no-emit-project --no-hashes"
+ruff = "ruff format && ruff check && ruff format"
