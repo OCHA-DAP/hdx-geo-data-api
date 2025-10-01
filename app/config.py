@@ -5,3 +5,4 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 PREFIX = getenv("PREFIX", "/api")
+VECTOR_COMMANDS = "Vector commands"

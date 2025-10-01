@@ -2,7 +2,7 @@
 #    uv export -o requirements.txt --no-dev --no-emit-project --no-hashes
 annotated-types==0.7.0
     # via pydantic
-anyio==4.10.0
+anyio==4.11.0
     # via
     #   httpx
     #   starlette
@@ -27,16 +27,20 @@ email-validator==2.3.0
     # via
     #   fastapi
     #   pydantic
-fastapi==0.116.2
+fastapi==0.118.0
     # via hdx-geo-data-api
-fastapi-cli==0.0.12
+fastapi-cli==0.0.13
     # via fastapi
-fastapi-cloud-cli==0.2.0
+fastapi-cloud-cli==0.2.1
     # via fastapi-cli
 h11==0.16.0
     # via
     #   httpcore
     #   uvicorn
+h2==4.3.0
+    # via httpx
+hpack==4.1.0
+    # via h2
 httpcore==1.0.9
     # via httpx
 httptools==0.6.4
@@ -45,6 +49,9 @@ httpx==0.28.1
     # via
     #   fastapi
     #   fastapi-cloud-cli
+    #   hdx-geo-data-api
+hyperframe==6.1.0
+    # via h2
 idna==3.10
     # via
     #   anyio
@@ -54,7 +61,7 @@ jinja2==3.1.6
     # via fastapi
 markdown-it-py==4.0.0
     # via rich
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
@@ -72,7 +79,7 @@ python-dotenv==1.1.1
     #   uvicorn
 python-multipart==0.0.20
     # via fastapi
-pyyaml==6.0.2
+pyyaml==6.0.3
     # via uvicorn
 rich==14.1.0
     # via
@@ -84,7 +91,7 @@ rich-toolkit==0.15.1
     #   fastapi-cloud-cli
 rignore==0.6.4
     # via fastapi-cloud-cli
-sentry-sdk==2.38.0
+sentry-sdk==2.39.0
     # via fastapi-cloud-cli
 shellingham==1.5.4
     # via typer
@@ -92,7 +99,7 @@ sniffio==1.3.1
     # via anyio
 starlette==0.48.0
     # via fastapi
-typer==0.17.4
+typer==0.19.2
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
@@ -104,11 +111,11 @@ typing-extensions==4.15.0
     #   rich-toolkit
     #   typer
     #   typing-inspection
-typing-inspection==0.4.1
+typing-inspection==0.4.2
     # via pydantic
 urllib3==2.5.0
     # via sentry-sdk
-uvicorn==0.35.0
+uvicorn==0.37.0
     # via
     #   fastapi
     #   fastapi-cli

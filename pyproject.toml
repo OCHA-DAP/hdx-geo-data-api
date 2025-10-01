@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = ["fastapi[standard]", "python-dotenv"]
+dependencies = ["fastapi[standard]", "httpx[http2]", "python-dotenv"]
 
 [dependency-groups]
 dev = ["pre-commit", "ruff", "taskipy"]
