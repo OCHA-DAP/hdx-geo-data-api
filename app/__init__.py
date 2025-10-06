@@ -1,13 +1,11 @@
 from fastapi import FastAPI
 
 from .config import PREFIX
-from .routers import health
-from .routers.gdal.vector import convert
+from .routers import gdal_vector, health
 
-routers = [health, convert]
+routers = [health, gdal_vector]
 
 app = FastAPI()
 
 for router in routers:
     app.include_router(router.router, prefix=f"{PREFIX}")
-    app.include_router(router.router, prefix=f"{PREFIX}/v1")
