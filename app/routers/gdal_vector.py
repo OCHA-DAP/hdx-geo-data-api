@@ -1,6 +1,7 @@
 from asyncio import create_subprocess_exec
 from pathlib import Path
 from typing import Annotated
+from venv import logger
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import FileResponse
@@ -11,12 +12,15 @@ from ..utils import get_download_url, get_options, get_output_path, get_temp_dir
 router = APIRouter(tags=["Vector Commands"])
 
 
-async def gdal_vector(tmp: Path, opts: VectorModel, cmds: list[str]) -> FileResponse:
+async def gdal_vector(tmp: Path, params: VectorModel, cmds: list[str]) -> FileResponse:
     """Endpoint to convert a vector file to another format."""
-    download_url = await get_download_url(opts.input)
-    output_path = tmp / opts.output
-    options = get_options(opts)
-    cmd = ["gdal", "vector", *cmds, download_url, output_path, *options]
+    download_url = await get_download_url(params.input)
+    output_path = tmp / params.output
+    params.output = str(output_path)
+    params.input = download_url
+    options = get_options(params)
+    cmd = ["gdal", "vector", *cmds, *options]
+    logger.info(f"Running command: {' '.join(cmd)}")
     proc = await create_subprocess_exec(*cmd)
     await proc.wait()
     output_path = await get_output_path(output_path)
@@ -26,25 +30,25 @@ async def gdal_vector(tmp: Path, opts: VectorModel, cmds: list[str]) -> FileResp
 @router.get("/gdal/vector/convert")
 async def gdal_vector_convert(
     tmp_dir: Annotated[Path, Depends(get_temp_dir)],
-    opts: Annotated[ConvertModel, Query()],
+    params: Annotated[ConvertModel, Query()],
 ) -> FileResponse:
     """Endpoint to convert a vector file to another format."""
-    return await gdal_vector(tmp_dir, opts, ["convert"])
+    return await gdal_vector(tmp_dir, params, ["convert"])
 
 
 @router.get("/gdal/vector/geom/simplify")
 async def gdal_vector_geom_simplify(
     tmp_dir: Annotated[Path, Depends(get_temp_dir)],
-    opts: Annotated[SimplifyModel, Query()],
+    params: Annotated[SimplifyModel, Query()],
 ) -> FileResponse:
     """Endpoint to filter a vector file to another format."""
-    return await gdal_vector(tmp_dir, opts, ["geom", "simplify"])
+    return await gdal_vector(tmp_dir, params, ["geom", "simplify"])
 
 
 @router.get("/gdal/vector/filter")
 async def gdal_vector_filter(
     tmp_dir: Annotated[Path, Depends(get_temp_dir)],
-    opts: Annotated[FilterModel, Query()],
+    params: Annotated[FilterModel, Query()],
 ) -> FileResponse:
     """Endpoint to filter a vector file to another format."""
-    return await gdal_vector(tmp_dir, opts, ["filter"])
+    return await gdal_vector(tmp_dir, params, ["filter"])

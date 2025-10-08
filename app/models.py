@@ -1,5 +1,4 @@
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import Query
 from pydantic import BaseModel
@@ -24,7 +23,7 @@ description = {
 
 
 class InputModel(BaseModel):
-    input: Annotated[UUID, Query(description=description["input"])]
+    input: Annotated[str, Query(description=description["input"])]
 
 
 class OutputModel(InputModel):
