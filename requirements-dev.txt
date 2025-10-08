@@ -7,7 +7,7 @@ anyio==4.11.0
     #   httpx
     #   starlette
     #   watchfiles
-certifi==2025.8.3
+certifi==2025.10.5
     # via
     #   httpcore
     #   httpx
@@ -36,7 +36,7 @@ fastapi==0.118.0
     # via hdx-geo-data-api
 fastapi-cli==0.0.13
     # via fastapi
-fastapi-cloud-cli==0.2.1
+fastapi-cloud-cli==0.3.0
     # via fastapi-cli
 filelock==3.19.1
     # via virtualenv
@@ -59,7 +59,7 @@ httpx==0.28.1
     #   hdx-geo-data-api
 hyperframe==6.1.0
     # via h2
-identify==2.6.14
+identify==2.6.15
     # via pre-commit
 idna==3.10
     # via
@@ -83,11 +83,11 @@ platformdirs==4.4.0
 pre-commit==4.3.0
 psutil==6.1.1
     # via taskipy
-pydantic==2.11.9
+pydantic==2.12.0
     # via
     #   fastapi
     #   fastapi-cloud-cli
-pydantic-core==2.33.2
+pydantic-core==2.41.1
     # via pydantic
 pygments==2.19.2
     # via rich
@@ -109,10 +109,10 @@ rich-toolkit==0.15.1
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
-rignore==0.6.4
+rignore==0.7.0
     # via fastapi-cloud-cli
-ruff==0.13.2
-sentry-sdk==2.39.0
+ruff==0.14.0
+sentry-sdk==2.40.0
     # via fastapi-cloud-cli
 shellingham==1.5.4
     # via typer
