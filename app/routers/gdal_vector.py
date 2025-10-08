@@ -14,10 +14,9 @@ router = APIRouter(tags=["Vector Commands"])
 
 async def gdal_vector(tmp: Path, params: VectorModel, cmds: list[str]) -> FileResponse:
     """Endpoint to convert a vector file to another format."""
-    download_url = await get_download_url(params.input)
     output_path = tmp / params.output
     params.output = str(output_path)
-    params.input = download_url
+    params.input = await get_download_url(params.input)
     options = get_options(params)
     cmd = ["gdal", "vector", *cmds, *options]
     logger.info(f"Running command: {' '.join(cmd)}")

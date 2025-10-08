@@ -14,7 +14,7 @@ COMPRESSION = "--layer-creation-option=COMPRESSION="
 ENCODING = "--layer-creation-option=ENCODING="
 
 
-def add_default_options(params: VectorModel, options: list[str]) -> list[str]:
+def add_default_options(options: list[str], params: VectorModel) -> list[str]:
     """Add default options."""
     response = [*options]
     suffixes = Path(params.output).suffixes
@@ -55,7 +55,7 @@ def get_options(params: VectorModel) -> list[str]:
             options.extend([f"--{opt_name.replace('_', '-')}={x}" for x in opt])
         else:
             options.append(f"--{opt_name.replace('_', '-')}={opt}")
-    return add_default_options(params, options)
+    return add_default_options(options, params)
 
 
 async def get_output_path(output_path: Path) -> Path:
