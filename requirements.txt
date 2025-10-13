@@ -27,11 +27,11 @@ email-validator==2.3.0
     # via
     #   fastapi
     #   pydantic
-fastapi==0.118.0
+fastapi==0.119.0
     # via hdx-geo-data-api
 fastapi-cli==0.0.13
     # via fastapi
-fastapi-cloud-cli==0.3.0
+fastapi-cloud-cli==0.3.1
     # via fastapi-cli
 h11==0.16.0
     # via
@@ -43,7 +43,7 @@ hpack==4.1.0
     # via h2
 httpcore==1.0.9
     # via httpx
-httptools==0.6.4
+httptools==0.7.1
     # via uvicorn
 httpx==0.28.1
     # via
@@ -52,7 +52,7 @@ httpx==0.28.1
     #   hdx-geo-data-api
 hyperframe==6.1.0
     # via h2
-idna==3.10
+idna==3.11
     # via
     #   anyio
     #   email-validator
@@ -81,7 +81,7 @@ python-multipart==0.0.20
     # via fastapi
 pyyaml==6.0.3
     # via uvicorn
-rich==14.1.0
+rich==14.2.0
     # via
     #   rich-toolkit
     #   typer
@@ -91,7 +91,7 @@ rich-toolkit==0.15.1
     #   fastapi-cloud-cli
 rignore==0.7.0
     # via fastapi-cloud-cli
-sentry-sdk==2.40.0
+sentry-sdk==2.41.0
     # via fastapi-cloud-cli
 shellingham==1.5.4
     # via typer
