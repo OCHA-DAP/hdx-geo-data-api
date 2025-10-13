@@ -77,6 +77,8 @@ python-dotenv==1.1.1
     # via
     #   hdx-geo-data-api
     #   uvicorn
+python-json-logger==4.0.0
+    # via hdx-geo-data-api
 python-multipart==0.0.20
     # via fastapi
 pyyaml==6.0.3
