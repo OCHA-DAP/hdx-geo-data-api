@@ -1,6 +1,7 @@
 from asyncio import create_subprocess_exec
 from collections.abc import AsyncGenerator
 from pathlib import Path
+from shutil import rmtree, unpack_archive
 from tempfile import TemporaryDirectory
 
 from fastapi import HTTPException, status
@@ -36,14 +37,26 @@ async def create_sozip(input_path: Path, output_path: Path) -> Path:
         *["--no-paths", "--quiet", "--recursive"],
     )
     await sozip.wait()
+    rmtree(input_path)
     return output_zip
 
 
-async def get_download_url(resource_id: str) -> str:
+async def download_resource(tmp_dir: Path, resource_id: str) -> str:
     """Get the download URL for a resource."""
-    async with AsyncClient(http2=True) as client:
+    async with AsyncClient(http2=True, follow_redirects=True) as client:
         r = await client.get(f"{HDX_URL}/api/3/action/resource_show?id={resource_id}")
-        return r.json()["result"]["download_url"]
+        download_url = r.json()["result"]["download_url"]
+        input_file = tmp_dir / download_url.split("/")[-1]
+        with input_file.open("wb") as f:
+            async with client.stream("GET", download_url) as r:
+                r.raise_for_status()
+                async for chunk in r.aiter_bytes():
+                    f.write(chunk)
+        if input_file.suffix == ".zip":
+            unpack_archive(input_file, tmp_dir)
+            input_file.unlink()
+            return str(input_file.with_suffix(""))
+        return str(input_file)
 
 
 def get_options(params: VectorModel) -> list[str]:
