@@ -11,6 +11,7 @@ RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
     python -m venv /opt/venv && \
     pip install --no-cache-dir -r requirements.txt
 
+COPY logging.conf ./logging.conf
 COPY app ./
 
 CMD ["fastapi", "run", "app"]

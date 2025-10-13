@@ -6,4 +6,6 @@ services:
       - 8000:8000
     volumes:
       - ./app:/srv/app
+      - ./log:/srv/log
+      - ./logging.dev.conf:/srv/logging.dev.conf
     command: fastapi dev app --host=0.0.0.0
