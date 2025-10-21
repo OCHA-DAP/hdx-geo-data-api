@@ -12,6 +12,6 @@ RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
     pip install --no-cache-dir -r requirements.txt
 
 COPY logging.conf ./logging.conf
-COPY app ./
+COPY app ./app
 
 CMD ["fastapi", "run", "app"]
