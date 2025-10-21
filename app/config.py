@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
-HDX_URL = getenv("HDX_URL", "https://data.humdata.org")
+HDX_URL = getenv("HDX_URL", "http://data.humdata.local")
 LOGGING_CONF_FILE = getenv("LOGGING_CONF_FILE", "logging.conf")
 PREFIX = getenv("PREFIX", "/api")
 TIMEOUT = int(getenv("TIMEOUT", "3600"))  # Default: 1 hour
