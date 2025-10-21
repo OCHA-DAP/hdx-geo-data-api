@@ -14,4 +14,6 @@ RUN --mount=type=bind,source=requirements.txt,target=requirements.txt \
 COPY logging.conf ./logging.conf
 COPY app ./app
 
-CMD ["fastapi", "run", "app"]
+EXPOSE 80
+
+CMD ["fastapi", "run", "app", "--host", "0.0.0.0", "--port", "80"]
