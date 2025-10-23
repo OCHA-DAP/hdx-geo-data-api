@@ -7,7 +7,11 @@ load_dotenv(override=True)
 
 HDX_URL = getenv("HDX_URL", "http://data.humdata.local")
 LOGGING_CONF_FILE = getenv("LOGGING_CONF_FILE", "logging.conf")
-PREFIX = getenv("PREFIX", "/api")
+BASE_URL_PATH = getenv("BASE_URL_PATH", "")
+PREFIX = f"{BASE_URL_PATH}{getenv('PREFIX', '/api')}"
+DOCS_URL = f"{BASE_URL_PATH}{getenv('DOCS_URL', '/docs')}"
+OPENAPI_URL = f"{BASE_URL_PATH}{getenv('OPENAPI_URL', '/openapi.json')}"
+REDOC_URL = f"{BASE_URL_PATH}{getenv('REDOC_URL', '/redoc')}"
 TIMEOUT = int(getenv("TIMEOUT", "3600"))  # Default: 1 hour
 VECTOR_COMMANDS = "Vector commands"
 
