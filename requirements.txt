@@ -91,7 +91,7 @@ rich-toolkit==0.15.1
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
-rignore==0.7.0
+rignore==0.7.1
     # via fastapi-cloud-cli
 sentry-sdk==2.41.0
     # via fastapi-cloud-cli
