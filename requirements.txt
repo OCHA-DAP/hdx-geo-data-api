@@ -69,7 +69,7 @@ pydantic==2.12.0
     # via
     #   fastapi
     #   fastapi-cloud-cli
-pydantic-core==2.41.1
+pydantic-core==2.41.4
     # via pydantic
 pygments==2.19.2
     # via rich
