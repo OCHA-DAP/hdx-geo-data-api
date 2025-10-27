@@ -125,7 +125,7 @@ starlette==0.48.0
 taskipy==1.14.1
 tomli==2.3.0
     # via taskipy
-typer==0.19.2
+typer==0.20.0
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
