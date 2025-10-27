@@ -141,7 +141,7 @@ typing-inspection==0.4.2
     # via pydantic
 urllib3==2.5.0
     # via sentry-sdk
-uvicorn==0.37.0
+uvicorn==0.38.0
     # via
     #   fastapi
     #   fastapi-cli
