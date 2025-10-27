@@ -73,7 +73,7 @@ pydantic-core==2.41.1
     # via pydantic
 pygments==2.19.2
     # via rich
-python-dotenv==1.1.1
+python-dotenv==1.2.1
     # via
     #   hdx-geo-data-api
     #   uvicorn
