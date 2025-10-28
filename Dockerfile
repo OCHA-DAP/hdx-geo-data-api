@@ -16,4 +16,4 @@ COPY app ./app
 
 EXPOSE 80
 
-CMD ["fastapi", "run", "app", "--host", "0.0.0.0", "--port", "80"]
+CMD ["fastapi", "run", "app", "--port", "80"]

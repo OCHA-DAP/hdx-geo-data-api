@@ -12,4 +12,4 @@ app = FastAPI(
 )
 
 for router in routers:
-    app.include_router(router.router, prefix=f"{PREFIX}")
+    app.include_router(router.router, prefix=PREFIX)
