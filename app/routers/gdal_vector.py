@@ -13,7 +13,7 @@ from ..utils import download_resource, get_options, get_output_path, get_temp_di
 router = APIRouter(tags=["Vector Commands"])
 
 
-async def gdal_vector(tmp: Path, params: VectorModel, cmds: list[str]) -> FileResponse:
+async def gdal_vector(tmp: Path, params: VectorModel, command: str) -> FileResponse:
     """Endpoint to convert a vector file to another format."""
     input_path = tmp / "input"
     input_path.mkdir()
@@ -22,7 +22,7 @@ async def gdal_vector(tmp: Path, params: VectorModel, cmds: list[str]) -> FileRe
     params.output = str(output_path)
     params.input = await download_resource(input_path, params.input)
     options = get_options(params)
-    cmd = ["gdal", "vector", *cmds, *options]
+    cmd = ["gdal", "vector", command, *options]
     logger.info(f"Running command: {' '.join(cmd)}")
     proc = await create_subprocess_exec(*cmd)
     await proc.wait()
@@ -37,16 +37,16 @@ async def gdal_vector_convert(
     params: Annotated[ConvertModel, Query()],
 ) -> FileResponse:
     """Endpoint to convert a vector file to another format."""
-    return await gdal_vector(tmp_dir, params, ["convert"])
+    return await gdal_vector(tmp_dir, params, "convert")
 
 
-@router.get("/gdal/vector/geom/simplify")
+@router.get("/gdal/vector/simplify-coverage")
 async def gdal_vector_geom_simplify(
     tmp_dir: Annotated[Path, Depends(get_temp_dir)],
     params: Annotated[SimplifyModel, Query()],
 ) -> FileResponse:
     """Endpoint to filter a vector file to another format."""
-    return await gdal_vector(tmp_dir, params, ["geom", "simplify"])
+    return await gdal_vector(tmp_dir, params, "simplify-coverage")
 
 
 @router.get("/gdal/vector/filter")
@@ -55,4 +55,4 @@ async def gdal_vector_filter(
     params: Annotated[FilterModel, Query()],
 ) -> FileResponse:
     """Endpoint to filter a vector file to another format."""
-    return await gdal_vector(tmp_dir, params, ["filter"])
+    return await gdal_vector(tmp_dir, params, "filter")

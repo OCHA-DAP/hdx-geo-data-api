@@ -1,4 +1,4 @@
-FROM ghcr.io/osgeo/gdal:alpine-normal-3.11.4
+FROM ghcr.io/osgeo/gdal:alpine-normal-3.12.0beta1
 
 WORKDIR /srv
 
