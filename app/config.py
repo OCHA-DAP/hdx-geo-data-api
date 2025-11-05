@@ -12,7 +12,7 @@ PREFIX = f"{BASE_URL_PATH}{getenv('PREFIX', '/api')}"
 DOCS_URL = f"{BASE_URL_PATH}{getenv('DOCS_URL', '/docs')}"
 OPENAPI_URL = f"{BASE_URL_PATH}{getenv('OPENAPI_URL', '/openapi.json')}"
 REDOC_URL = f"{BASE_URL_PATH}{getenv('REDOC_URL', '/redoc')}"
-TIMEOUT = int(getenv("TIMEOUT", "3600"))  # Default: 1 hour
+TIMEOUT = int(getenv("TIMEOUT", f"{5 * 60}"))  # Default: 5 min
 VECTOR_COMMANDS = "Vector commands"
 
 fileConfig(LOGGING_CONF_FILE)

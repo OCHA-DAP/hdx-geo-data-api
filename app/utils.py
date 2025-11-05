@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from fastapi import HTTPException, status
 from httpx import AsyncClient
 
-from .config import HDX_URL
+from .config import HDX_URL, TIMEOUT
 from .models import VectorModel
 
 TARGET_ARCGIS_VERSION = "--layer-creation-option=TARGET_ARCGIS_VERSION="
@@ -43,7 +43,11 @@ async def create_sozip(input_path: Path, output_path: Path) -> Path:
 
 async def download_resource(tmp_dir: Path, resource_id: str) -> str:
     """Get the download URL for a resource."""
-    async with AsyncClient(http2=True, follow_redirects=True) as client:
+    async with AsyncClient(
+        http2=True,
+        follow_redirects=True,
+        timeout=TIMEOUT,
+    ) as client:
         r = await client.get(f"{HDX_URL}/api/3/action/resource_show?id={resource_id}")
         download_url = r.json()["result"]["download_url"]
         input_file = tmp_dir / download_url.split("/")[-1]
