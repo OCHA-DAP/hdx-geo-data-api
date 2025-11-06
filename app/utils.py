@@ -1,8 +1,8 @@
 from asyncio import create_subprocess_exec
 from collections.abc import AsyncGenerator
 from pathlib import Path
-from shutil import rmtree, unpack_archive
 from tempfile import TemporaryDirectory
+from zipfile import ZipFile
 
 from fastapi import HTTPException, status
 from httpx import AsyncClient
@@ -37,16 +37,24 @@ async def create_sozip(input_path: Path, output_path: Path) -> Path:
         *["--no-paths", "--quiet", "--recursive"],
     )
     await sozip.wait()
-    rmtree(input_path)
     return output_zip
+
+
+def unzip_flat(input_file: Path, output_dir: Path) -> None:
+    """Unzip a file to a flat directory."""
+    with ZipFile(input_file) as z:
+        for member in z.infolist():
+            if Path(member.filename).name:
+                member.filename = Path(member.filename).name
+                z.extract(member=member, path=output_dir)
 
 
 async def download_resource(tmp_dir: Path, resource_id: str) -> str:
     """Get the download URL for a resource."""
     async with AsyncClient(
         http2=True,
-        follow_redirects=True,
         timeout=TIMEOUT,
+        follow_redirects=True,
     ) as client:
         r = await client.get(f"{HDX_URL}/api/3/action/resource_show?id={resource_id}")
         download_url = r.json()["result"]["download_url"]
@@ -57,9 +65,9 @@ async def download_resource(tmp_dir: Path, resource_id: str) -> str:
                 async for chunk in r.aiter_bytes():
                     f.write(chunk)
         if input_file.suffix == ".zip":
-            unpack_archive(input_file, tmp_dir)
-            input_file.unlink()
-            return str(input_file.with_suffix(""))
+            unzip_dir = input_file.with_suffix("")
+            unzip_flat(input_file, unzip_dir)
+            return str(unzip_dir)
         return str(input_file)
 
 

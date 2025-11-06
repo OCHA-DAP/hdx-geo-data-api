@@ -29,7 +29,7 @@ email-validator==2.3.0
     # via
     #   fastapi
     #   pydantic
-fastapi==0.120.4
+fastapi==0.121.0
     # via hdx-geo-data-api
 fastapi-cli==0.0.14
     # via fastapi
@@ -67,11 +67,11 @@ markupsafe==3.0.3
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-pydantic==2.12.3
+pydantic==2.12.4
     # via
     #   fastapi
     #   fastapi-cloud-cli
-pydantic-core==2.41.4
+pydantic-core==2.41.5
     # via pydantic
 pygments==2.19.2
     # via rich
@@ -93,7 +93,7 @@ rich-toolkit==0.15.1
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
-rignore==0.7.3
+rignore==0.7.6
     # via fastapi-cloud-cli
 sentry-sdk==2.43.0
     # via fastapi-cloud-cli
