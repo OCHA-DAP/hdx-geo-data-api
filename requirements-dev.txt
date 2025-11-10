@@ -150,7 +150,7 @@ uvicorn==0.38.0
     #   fastapi-cloud-cli
 uvloop==0.22.1 ; platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32'
     # via uvicorn
-virtualenv==20.35.3
+virtualenv==20.35.4
     # via pre-commit
 watchfiles==1.1.1
     # via uvicorn
