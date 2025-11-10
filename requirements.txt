@@ -67,7 +67,7 @@ markupsafe==3.0.3
     # via jinja2
 mdurl==0.1.2
     # via markdown-it-py
-pydantic==2.12.3
+pydantic==2.12.4
     # via
     #   fastapi
     #   fastapi-cloud-cli

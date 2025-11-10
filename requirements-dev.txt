@@ -85,7 +85,7 @@ platformdirs==4.5.0
 pre-commit==4.3.0
 psutil==6.1.1
     # via taskipy
-pydantic==2.12.3
+pydantic==2.12.4
     # via
     #   fastapi
     #   fastapi-cloud-cli
