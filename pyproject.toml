@@ -9,6 +9,8 @@ dependencies = [
     "httpx[http2]",
     "python-dotenv",
     "python-json-logger",
+    "mixpanel",
+    "ua-parser",
 ]
 
 [dependency-groups]

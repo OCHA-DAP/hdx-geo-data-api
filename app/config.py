@@ -2,6 +2,7 @@ from logging.config import fileConfig
 from os import environ, getenv
 
 from dotenv import load_dotenv
+from mixpanel import Mixpanel
 
 load_dotenv(override=True)
 
@@ -14,6 +15,8 @@ OPENAPI_URL = f"{BASE_URL_PATH}{getenv('OPENAPI_URL', '/openapi.json')}"
 REDOC_URL = f"{BASE_URL_PATH}{getenv('REDOC_URL', '/redoc')}"
 TIMEOUT = int(getenv("TIMEOUT", "3600"))  # Default: 1 hour
 VECTOR_COMMANDS = "Vector commands"
+MIXPANEL_TOKEN = getenv("MIXPANEL_TOKEN", "")
+MIXPANEL = Mixpanel(MIXPANEL_TOKEN) if MIXPANEL_TOKEN else None
 
 fileConfig(LOGGING_CONF_FILE)
 
