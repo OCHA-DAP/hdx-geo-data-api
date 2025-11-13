@@ -1,14 +1,12 @@
 import hashlib
-import logging
 import time
 from urllib.parse import parse_qs, unquote, urlparse
+from venv import logger
 
 import ua_parser.user_agent_parser as useragent
 from fastapi import Request, Response
 
 from app.config import MIXPANEL
-
-logger = logging.getLogger(__name__)
 
 
 async def track_api_call(request: Request, response: Response):

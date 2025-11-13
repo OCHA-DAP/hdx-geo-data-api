@@ -1,11 +1,9 @@
-import logging
+from venv import logger
 
 from fastapi import BackgroundTasks, Request
 
 from app.config import MIXPANEL, PREFIX
 from app.middleware.util.util import track_api_call
-
-logger = logging.getLogger(__name__)
 
 
 async def mixpanel_tracking_middleware(request: Request, call_next):
