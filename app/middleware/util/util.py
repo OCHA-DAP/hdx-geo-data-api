@@ -13,9 +13,13 @@ async def track_api_call(request: Request, response: Response):
     is_nginx_verify_request = getattr(request.state, "is_nginx_verify_request", False)
 
     if is_nginx_verify_request:
-        endpoint, query_params_keys, current_url = _parse_nginx_header(request)
+        endpoint, query_params_keys, resource_id, current_url = _parse_nginx_header(
+            request,
+        )
     else:
-        endpoint, query_params_keys, current_url = _parse_fastapi_request(request)
+        endpoint, query_params_keys, resource_id, current_url = _parse_fastapi_request(
+            request,
+        )
 
     user_agent_string = request.headers.get("user-agent", "")
     ip_address = request.headers.get("x-forwarded-for", "")
@@ -34,6 +38,7 @@ async def track_api_call(request: Request, response: Response):
         "time": event_time,
         "request type": "nginx" if is_nginx_verify_request else "standard",
         "server side": True,
+        "resource id": resource_id,
         "response code": response_code,
         "user agent": user_agent_string,
         "ip": ip_address,
@@ -79,10 +84,11 @@ def _parse_fastapi_request(request: Request) -> tuple[str, list[str], str, str, 
     endpoint = request.url.path
 
     query_params_keys = list(request.query_params.keys())
+    resource_id = request.query_params.get("input", "")
 
     current_url = unquote(str(request.url))
 
-    return endpoint, query_params_keys, current_url
+    return endpoint, query_params_keys, resource_id, current_url
 
 
 def _parse_nginx_header(request: Request) -> tuple[str, list[str], str, str, str]:
@@ -102,12 +108,13 @@ def _parse_nginx_header(request: Request) -> tuple[str, list[str], str, str, str
     )
 
     query_params_keys = list(query_params.keys())
+    resource_id = query_params.get("input", [""])[0]
 
     protocol = request.headers.get("x-forwarded-proto", "")
     host = request.headers.get("x-forwarded-host", "")
     current_url = unquote(f"{protocol}://{host}{original_uri_from_nginx}")
 
-    return endpoint, query_params_keys, current_url
+    return endpoint, query_params_keys, resource_id, current_url
 
 
 def _parse_user_agent(
