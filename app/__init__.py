@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 
 from .config import DOCS_URL, OPENAPI_URL, PREFIX, REDOC_URL
+from .middleware.app_identifier_middleware import app_identifier_middleware
 from .middleware.mixpanel_tracking_middleware import mixpanel_tracking_middleware
 from .routers import gdal_vector, health
 
@@ -11,6 +12,13 @@ app = FastAPI(
     redoc_url=REDOC_URL,
     openapi_url=OPENAPI_URL,
 )
+
+
+# add middleware
+@app.middleware("http")
+async def app_identifier_middleware_init(request: Request, call_next):
+    response = await app_identifier_middleware(request, call_next)
+    return response
 
 
 # add middleware

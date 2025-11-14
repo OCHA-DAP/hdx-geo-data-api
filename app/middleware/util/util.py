@@ -21,6 +21,8 @@ async def track_api_call(request: Request, response: Response):
             request,
         )
 
+    app_name = getattr(request.state, "app_name", None)
+    email_hash = getattr(request.state, "email_hash", None)
     user_agent_string = request.headers.get("user-agent", "")
     ip_address = request.headers.get("x-forwarded-for", "")
     response_code = response.status_code
@@ -36,6 +38,8 @@ async def track_api_call(request: Request, response: Response):
         "endpoint path": endpoint,
         "query params": query_params_keys,
         "time": event_time,
+        "app name": app_name,
+        "email hash": email_hash,
         "request type": "nginx" if is_nginx_verify_request else "standard",
         "server side": True,
         "resource id": resource_id,
