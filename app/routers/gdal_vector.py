@@ -1,6 +1,5 @@
 from asyncio import create_subprocess_exec
 from pathlib import Path
-from shutil import rmtree
 from typing import Annotated
 from venv import logger
 
@@ -22,11 +21,10 @@ async def gdal_vector(tmp: Path, params: VectorModel, command: str) -> FileRespo
     params.output = str(output_path)
     params.input = await download_resource(input_path, params.input)
     options = get_options(params)
-    cmd = ["gdal", "vector", command, *options]
+    cmd = ["gdal", "vector", command, "--quiet", *options]
     logger.info(f"Running command: {' '.join(cmd)}")
     proc = await create_subprocess_exec(*cmd)
     await proc.wait()
-    rmtree(input_path)
     output_path = await get_output_path(output_path)
     return FileResponse(output_path, filename=output_path.name)
 
@@ -36,7 +34,7 @@ async def gdal_vector_convert(
     tmp_dir: Annotated[Path, Depends(get_temp_dir)],
     params: Annotated[ConvertModel, Query()],
 ) -> FileResponse:
-    """Endpoint to convert a vector file to another format."""
+    """Convert to another format."""
     return await gdal_vector(tmp_dir, params, "convert")
 
 
@@ -45,7 +43,7 @@ async def gdal_vector_geom_simplify(
     tmp_dir: Annotated[Path, Depends(get_temp_dir)],
     params: Annotated[SimplifyModel, Query()],
 ) -> FileResponse:
-    """Endpoint to filter a vector file to another format."""
+    """Simplify coverage geometry (maintains topology)."""
     return await gdal_vector(tmp_dir, params, "simplify-coverage")
 
 
@@ -54,5 +52,5 @@ async def gdal_vector_filter(
     tmp_dir: Annotated[Path, Depends(get_temp_dir)],
     params: Annotated[FilterModel, Query()],
 ) -> FileResponse:
-    """Endpoint to filter a vector file to another format."""
+    """Filter by bbox or attribute."""
     return await gdal_vector(tmp_dir, params, "filter")

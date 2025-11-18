@@ -3,9 +3,8 @@ services:
     build: .
     env_file: .env
     ports:
-      - 8000:8000
+      - 8000:80
     volumes:
       - ./app:/srv/app
       - ./log:/srv/log
       - ./logging.dev.conf:/srv/logging.dev.conf
-    command: fastapi dev app --host=0.0.0.0
