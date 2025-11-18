@@ -13,7 +13,7 @@ ALLOWED_API_ENDPOINTS = {
 
 async def app_identifier_middleware(request: Request, call_next):
     """Middleware to check for the app_identifier in the request and add it to the request state"""
-    header_identifier = request.headers.get("X-HDX-GEODATA-API-APP-IDENTIFIER")
+    header_identifier = request.headers.get("Authorization")
 
     request.state.is_nginx_verify_request = False
 
@@ -60,17 +60,19 @@ def _check_allow_request(
             headers = {"Authorization": hdx_api_token}
 
             response = requests.get(ckan_url, headers=headers)
+            json = response.json()
 
-            if response.json().get("success"):
-                app_name = response.json().get("result", {}).get("token_name", "")
-                email_hash = response.json().get("result", {}).get("email_hash", "")
+            if json.get("success"):
+                app_name = json.get("result", {}).get("token_name", "")
+                email_hash = json.get("result", {}).get("email_hash", "")
                 identifier_params = {"app_name": app_name, "email_hash": email_hash}
-                logger.warning(f"Application: {app_name}, Email: {email_hash}")
-
+                logger.info(f"Application: {app_name}, Email: {email_hash}")
                 return status.HTTP_200_OK, None, identifier_params
+            logger.warning(f"Token validation failed: {json}")
             return status.HTTP_403_FORBIDDEN, "Invalid app identifier", None
 
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Token validation error: {e}")
             return status.HTTP_403_FORBIDDEN, "Invalid app identifier", None
 
     return status.HTTP_200_OK, None, None
