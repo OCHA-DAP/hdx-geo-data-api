@@ -1,13 +1,15 @@
+import logging
 from asyncio import create_subprocess_exec
 from pathlib import Path
 from typing import Annotated
-from venv import logger
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import FileResponse
 
 from ..models import ConvertModel, FilterModel, SimplifyModel, VectorModel
 from ..utils import download_resource, get_options, get_output_path, get_temp_dir
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Vector Commands"])
 

@@ -1,10 +1,12 @@
-from venv import logger
+import logging
 
-import requests
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
+from httpx import AsyncClient
 
 from app.config import HDX_URL, PREFIX
+
+logger = logging.getLogger(__name__)
 
 ALLOWED_API_ENDPOINTS = {
     f"{PREFIX}/healthz",
@@ -19,14 +21,18 @@ async def app_identifier_middleware(request: Request, call_next):
 
     path = request.url.path
 
-    status_code, error_message, identifier_params = _check_allow_request(
+    status_code, error_message, identifier_params = await _check_allow_request(
         path,
         header_identifier,
     )
 
     if status_code == status.HTTP_200_OK:
-        request.state.app_name = identifier_params.get("app_name")
-        request.state.email_hash = identifier_params.get("email_hash")
+        if identifier_params is not None:
+            request.state.app_name = identifier_params.get("app_name")
+            request.state.email_hash = identifier_params.get("email_hash")
+        else:
+            request.state.app_name = None
+            request.state.email_hash = None
     else:
         return JSONResponse(content={"error": error_message}, status_code=status_code)
 
@@ -34,7 +40,7 @@ async def app_identifier_middleware(request: Request, call_next):
     return response
 
 
-def _check_allow_request(
+async def _check_allow_request(
     request_path: str,
     hdx_api_token: str | None,
 ) -> tuple[int, str | None, dict | None]:
@@ -56,20 +62,21 @@ def _check_allow_request(
             return status.HTTP_403_FORBIDDEN, "Missing app identifier", None
 
         try:
-            ckan_url = f"{HDX_URL}api/3/action/hdx_token_info"
+            ckan_url = f"{HDX_URL}/api/3/action/hdx_token_info"
             headers = {"Authorization": hdx_api_token}
 
-            response = requests.get(ckan_url, headers=headers)
-            json = response.json()
+            async with AsyncClient(timeout=10.0) as client:
+                response = await client.get(ckan_url, headers=headers)
+                json = response.json()
 
-            if json.get("success"):
-                app_name = json.get("result", {}).get("token_name", "")
-                email_hash = json.get("result", {}).get("email_hash", "")
-                identifier_params = {"app_name": app_name, "email_hash": email_hash}
-                logger.info(f"Application: {app_name}, Email: {email_hash}")
-                return status.HTTP_200_OK, None, identifier_params
-            logger.warning(f"Token validation failed: {json}")
-            return status.HTTP_403_FORBIDDEN, "Invalid app identifier", None
+                if json.get("success"):
+                    app_name = json.get("result", {}).get("token_name", "")
+                    email_hash = json.get("result", {}).get("email_hash", "")
+                    identifier_params = {"app_name": app_name, "email_hash": email_hash}
+                    logger.info(f"Application: {app_name}, Email: {email_hash}")
+                    return status.HTTP_200_OK, None, identifier_params
+                logger.warning(f"Token validation failed: {json}")
+                return status.HTTP_403_FORBIDDEN, "Invalid app identifier", None
 
         except Exception as e:
             logger.warning(f"Token validation error: {e}")

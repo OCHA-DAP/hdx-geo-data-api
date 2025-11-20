@@ -16,15 +16,15 @@ app = FastAPI(
 
 # add middleware
 @app.middleware("http")
-async def app_identifier_middleware_init(request: Request, call_next):
-    response = await app_identifier_middleware(request, call_next)
+async def mixpanel_tracking_middleware_init(request: Request, call_next):
+    response = await mixpanel_tracking_middleware(request, call_next)
     return response
 
 
 # add middleware
 @app.middleware("http")
-async def mixpanel_tracking_middleware_init(request: Request, call_next):
-    response = await mixpanel_tracking_middleware(request, call_next)
+async def app_identifier_middleware_init(request: Request, call_next):
+    response = await app_identifier_middleware(request, call_next)
     return response
 
 

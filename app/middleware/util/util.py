@@ -1,15 +1,29 @@
 import hashlib
+import logging
 import time
 from urllib.parse import parse_qs, unquote, urlparse
-from venv import logger
 
 import ua_parser.user_agent_parser as useragent
 from fastapi import Request, Response
 
 from app.config import MIXPANEL
 
+logger = logging.getLogger(__name__)
+
 
 async def track_api_call(request: Request, response: Response):
+    """Tracks an API call by collecting request and response metadata and sending it to Mixpanel.
+
+    Args:
+        request (Request): The FastAPI request object containing information about the incoming API call.
+        response (Response): The FastAPI response object containing information about the outgoing response.
+
+    Purpose:
+        This function extracts relevant metadata from the request and response, such as endpoint, query parameters,
+        user agent, IP address, response code, and other contextual information. It then sends this data as an event
+        to Mixpanel for analytics and monitoring purposes.
+
+    """
     is_nginx_verify_request = getattr(request.state, "is_nginx_verify_request", False)
 
     if is_nginx_verify_request:
@@ -55,18 +69,28 @@ async def track_api_call(request: Request, response: Response):
 
 
 async def send_mixpanel_event(event_name: str, distinct_id: str, event_data: dict):
+    """Send an event to Mixpanel for analytics tracking.
+
+    Args:
+        event_name: The name of the event to track.
+        distinct_id: Unique identifier for the user or entity.
+        event_data: Dictionary of event properties to send.
+
+    """
     MIXPANEL.track(distinct_id, event_name, event_data)
 
 
 def extract_path_identifier_and_query_params(
     original_url: str,
-) -> tuple[str, str | None, dict]:
+) -> tuple[str, dict]:
     """Extract the path and query parameters from the Nginx header.
 
     Args:
         original_url: The original URL from the Nginx header
     Returns:
-        Tuple of path and query parameters
+        Tuple containing:
+            - path (str): The path component of the URL
+            - query_params (dict): The query parameters as a dictionary
 
     """
     parsed_url = urlparse(original_url)
@@ -75,7 +99,7 @@ def extract_path_identifier_and_query_params(
     return path, query_params
 
 
-def _parse_fastapi_request(request: Request) -> tuple[str, list[str], str, str, str]:
+def _parse_fastapi_request(request: Request) -> tuple[str, list[str], str, str]:
     """Parse the FastAPI request to extract data needed for analytics.
 
     Args:
@@ -95,7 +119,7 @@ def _parse_fastapi_request(request: Request) -> tuple[str, list[str], str, str, 
     return endpoint, query_params_keys, resource_id, current_url
 
 
-def _parse_nginx_header(request: Request) -> tuple[str, list[str], str, str, str]:
+def _parse_nginx_header(request: Request) -> tuple[str, list[str], str, str]:
     """Parse nginx headers to extract data needed for analytics.
 
     Args:
@@ -106,7 +130,8 @@ def _parse_nginx_header(request: Request) -> tuple[str, list[str], str, str, str
 
     """
     original_uri_from_nginx = request.headers.get("X-Original-URI")
-    assert original_uri_from_nginx is not None
+    if original_uri_from_nginx is None:
+        raise ValueError("X-Original-URI header is required")
     endpoint, query_params = extract_path_identifier_and_query_params(
         original_uri_from_nginx,
     )
@@ -144,23 +169,39 @@ def _parse_user_agent(
 class HashCodeGenerator:
     """Works only on simple dictionaries (not nested). At least the specified fields need to not be nested."""
 
-    def __init__(self, src_dict, field_list=None):
+    def __init__(self, src_dict: dict, field_list: list = None) -> None:
+        """Initialize the HashCodeGenerator.
+
+        Args:
+            src_dict (dict): The source dictionary containing key-value pairs to be used for hash generation.
+            field_list (list, optional): List of keys from src_dict to include in the hash. If None, all keys from src_dict are used.
+
+        Raises:
+            ValueError: If field_list is None and src_dict is empty.
+            Exception: If both field_list and src_dict are null.
+
+        """
         if not field_list and src_dict:
             field_list = list(src_dict.keys())
 
-        assert field_list is not None
+        if field_list is None:
+            raise ValueError("field_list cannot be None")
         field_list.sort()
-        try:
-            self.__inner_string = ""
-            if field_list and src_dict:
-                for field in field_list:
-                    self.__inner_string += f"{field}-{src_dict.get(field)},"
-            else:
-                raise Exception("Either field list or source dict are null")
-        except Exception:
-            raise Exception("Exception while trying to generate hash code")
+        self.__inner_string = ""
+        if field_list and src_dict:
+            for field in field_list:
+                self.__inner_string += f"{field}-{src_dict.get(field)},"
+        else:
+            raise Exception("Either field list or source dict are null")
 
-    def compute_hash(self):
+    def compute_hash(self) -> str:
+        """Compute and return an MD5 hash code based on the concatenated string
+        representation of the selected fields from the source dictionary.
+
+        Returns:
+            str: The MD5 hash code as a hexadecimal string.
+
+        """
         hash_builder = hashlib.md5()
         hash_builder.update(self.__inner_string.encode())
         hash_code = hash_builder.hexdigest()
