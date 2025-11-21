@@ -8,14 +8,14 @@ from fastapi import HTTPException, status
 from httpx import AsyncClient
 
 from .config import HDX_URL, TIMEOUT
-from .models import VectorModel
+from .models import InfoModel, VectorFileModel
 
 TARGET_ARCGIS_VERSION = "--layer-creation-option=TARGET_ARCGIS_VERSION="
 COMPRESSION = "--layer-creation-option=COMPRESSION="
 ENCODING = "--layer-creation-option=ENCODING="
 
 
-def add_default_options(options: list[str], params: VectorModel) -> list[str]:
+def add_default_options(options: list[str], params: VectorFileModel) -> list[str]:
     """Add default options."""
     response = [*options]
     suffixes = Path(params.output).suffixes
@@ -71,15 +71,20 @@ async def download_resource(tmp_dir: Path, resource_id: str) -> str:
         return str(input_file)
 
 
-def get_options(params: VectorModel) -> list[str]:
+def get_options(params: VectorFileModel | InfoModel) -> list[str]:
     """Format the options."""
     options = []
     for opt_name in params.model_fields_set:
-        opt = getattr(params, opt_name)
-        if isinstance(opt, list):
-            options.extend([f"--{opt_name.replace('_', '-')}={x}" for x in opt])
+        cli_name = opt_name.replace("_", "-")
+        value = getattr(params, opt_name)
+        if isinstance(value, list):
+            options.extend([f"--{cli_name}={x}" for x in value])
+        elif isinstance(value, bool) and value:
+            options.append(f"--{cli_name}")
         else:
-            options.append(f"--{opt_name.replace('_', '-')}={opt}")
+            options.append(f"--{cli_name}={value}")
+    if isinstance(params, InfoModel):
+        return options
     return add_default_options(options, params)
 
 
