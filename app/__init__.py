@@ -4,9 +4,9 @@ from fastapi import FastAPI, Request
 
 from .config import DOCS_URL, OPENAPI_URL, PREFIX, REDOC_URL
 from .middleware.mixpanel import mixpanel_tracking
-from .routers import gdal_vector, health
+from .routers import health, vector
 
-routers = [health, gdal_vector]
+routers = [health, vector]
 
 app = FastAPI(
     docs_url=DOCS_URL,
