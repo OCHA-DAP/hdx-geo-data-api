@@ -1,27 +1,30 @@
-import hashlib
 import logging
-import time
+from hashlib import md5
+from time import time
 from urllib.parse import parse_qs, unquote, urlparse
 
 import ua_parser.user_agent_parser as useragent
 from fastapi import Request, Response
 
-from app.config import MIXPANEL
+from ..config import mixpanel
 
 logger = logging.getLogger(__name__)
 
 
-async def track_api_call(request: Request, response: Response):
-    """Tracks an API call by collecting request and response metadata and sending it to Mixpanel.
+async def track_api_call(request: Request, response: Response) -> None:
+    """Tracks an API call by collecting request and response metadata to Mixpanel.
 
     Args:
-        request (Request): The FastAPI request object containing information about the incoming API call.
-        response (Response): The FastAPI response object containing information about the outgoing response.
+        request: The FastAPI request object containing information about the
+        incoming API call.
+        response: The FastAPI response object containing information about
+        the outgoing response.
 
     Purpose:
-        This function extracts relevant metadata from the request and response, such as endpoint, query parameters,
-        user agent, IP address, response code, and other contextual information. It then sends this data as an event
-        to Mixpanel for analytics and monitoring purposes.
+        This function extracts relevant metadata from the request and response, such as
+        endpoint, query parameters, user agent, IP address, response code, and other
+        contextual information. It then sends this data as an event to Mixpanel for
+        analytics and monitoring purposes.
 
     """
     is_nginx_verify_request = getattr(request.state, "is_nginx_verify_request", False)
@@ -44,7 +47,7 @@ async def track_api_call(request: Request, response: Response):
     distinct_id = HashCodeGenerator(
         {"ip": ip_address, "ua": user_agent_string},
     ).compute_hash()
-    event_time = time.time()
+    event_time = time()
 
     ua_os, ua_browser, ua_browser_version = _parse_user_agent(user_agent_string)
 
@@ -68,7 +71,11 @@ async def track_api_call(request: Request, response: Response):
     await send_mixpanel_event("geodata api call", distinct_id, mixpanel_dict)
 
 
-async def send_mixpanel_event(event_name: str, distinct_id: str, event_data: dict):
+async def send_mixpanel_event(
+    event_name: str,
+    distinct_id: str,
+    event_data: dict,
+) -> None:
     """Send an event to Mixpanel for analytics tracking.
 
     Args:
@@ -77,20 +84,21 @@ async def send_mixpanel_event(event_name: str, distinct_id: str, event_data: dic
         event_data: Dictionary of event properties to send.
 
     """
-    MIXPANEL.track(distinct_id, event_name, event_data)
+    if not mixpanel:
+        logger.error("MIXPANEL_TOKEN environment variable is not set.")
+        return
+    mixpanel.track(distinct_id, event_name, event_data)
 
 
-def extract_path_identifier_and_query_params(
-    original_url: str,
-) -> tuple[str, dict]:
+def extract_path_identifier_and_query_params(original_url: str) -> tuple[str, dict]:
     """Extract the path and query parameters from the Nginx header.
 
     Args:
         original_url: The original URL from the Nginx header
     Returns:
         Tuple containing:
-            - path (str): The path component of the URL
-            - query_params (dict): The query parameters as a dictionary
+            - path: The path component of the URL
+            - query_params: The query parameters as a dictionary
 
     """
     parsed_url = urlparse(original_url)
@@ -131,7 +139,8 @@ def _parse_nginx_header(request: Request) -> tuple[str, list[str], str, str]:
     """
     original_uri_from_nginx = request.headers.get("X-Original-URI")
     if original_uri_from_nginx is None:
-        raise ValueError("X-Original-URI header is required")
+        e = "X-Original-URI header is required"
+        raise ValueError(e)
     endpoint, query_params = extract_path_identifier_and_query_params(
         original_uri_from_nginx,
     )
@@ -146,10 +155,10 @@ def _parse_nginx_header(request: Request) -> tuple[str, list[str], str, str]:
     return endpoint, query_params_keys, resource_id, current_url
 
 
-def _parse_user_agent(
-    user_agent: str,
-) -> tuple[str | None, str | None, str | None]:
-    """Parse the user agent string to extract the operating system, browser, and browser version.
+def _parse_user_agent(user_agent: str) -> tuple[str | None, str | None, str | None]:
+    """Parse the user agent string.
+
+    Extracts the operating system, browser, and browser version.
 
     Args:
         user_agent: The user agent string to be parsed
@@ -167,14 +176,19 @@ def _parse_user_agent(
 
 
 class HashCodeGenerator:
-    """Works only on simple dictionaries (not nested). At least the specified fields need to not be nested."""
+    """Works only on simple dictionaries (not nested).
 
-    def __init__(self, src_dict: dict, field_list: list = None) -> None:
+    At least the specified fields need to not be nested.
+    """
+
+    def __init__(self, src_dict: dict, field_list: list | None = None) -> None:
         """Initialize the HashCodeGenerator.
 
         Args:
-            src_dict (dict): The source dictionary containing key-value pairs to be used for hash generation.
-            field_list (list, optional): List of keys from src_dict to include in the hash. If None, all keys from src_dict are used.
+            src_dict (dict): The source dictionary containing key-value pairs to be used
+            for hash generation.
+            field_list (list, optional): List of keys from src_dict to include in the
+            hash. If None, all keys from src_dict are used.
 
         Raises:
             ValueError: If field_list is None and src_dict is empty.
@@ -185,27 +199,29 @@ class HashCodeGenerator:
             field_list = list(src_dict.keys())
 
         if field_list is None:
-            raise ValueError("field_list cannot be None")
+            e = "field_list cannot be None"
+            raise ValueError(e)
         field_list.sort()
         self.__inner_string = ""
         if field_list and src_dict:
             for field in field_list:
                 self.__inner_string += f"{field}-{src_dict.get(field)},"
         else:
-            raise Exception("Either field list or source dict are null")
+            e = "Either field list or source dict are null"
+            raise Exception(e)  # noqa: TRY002
 
     def compute_hash(self) -> str:
-        """Compute and return an MD5 hash code based on the concatenated string
-        representation of the selected fields from the source dictionary.
+        """Compute and return an MD5 hash code.
+
+        Hash based on the concatenated string representation of the selected fields from
+        the source dictionary.
 
         Returns:
             str: The MD5 hash code as a hexadecimal string.
 
         """
-        hash_builder = hashlib.md5()
+        hash_builder = md5(usedforsecurity=False)
         hash_builder.update(self.__inner_string.encode())
         hash_code = hash_builder.hexdigest()
-        logger.debug(
-            f"Generated code for {self.__inner_string} is {hash_code}",
-        )
+        logger.debug("Generated code for %s is %s", self.__inner_string, hash_code)
         return hash_code

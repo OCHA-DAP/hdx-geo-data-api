@@ -1,8 +1,9 @@
+from collections.abc import Callable
+
 from fastapi import FastAPI, Request
 
 from .config import DOCS_URL, OPENAPI_URL, PREFIX, REDOC_URL
-from .middleware.app_identifier_middleware import app_identifier_middleware
-from .middleware.mixpanel_tracking_middleware import mixpanel_tracking_middleware
+from .middleware.mixpanel import mixpanel_tracking
 from .routers import gdal_vector, health
 
 routers = [health, gdal_vector]
@@ -14,18 +15,10 @@ app = FastAPI(
 )
 
 
-# add middleware
 @app.middleware("http")
-async def mixpanel_tracking_middleware_init(request: Request, call_next):
-    response = await mixpanel_tracking_middleware(request, call_next)
-    return response
-
-
-# add middleware
-@app.middleware("http")
-async def app_identifier_middleware_init(request: Request, call_next):
-    response = await app_identifier_middleware(request, call_next)
-    return response
+async def mixpanel_tracking_init(request: Request, call_next: Callable) -> Callable:
+    """Track the activity of the user in Mixpanel."""
+    return await mixpanel_tracking(request, call_next)
 
 
 for router in routers:

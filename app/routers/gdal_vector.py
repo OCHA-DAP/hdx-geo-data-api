@@ -6,12 +6,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import FileResponse
 
+from ..auth import get_api_key
 from ..models import ConvertModel, FilterModel, SimplifyModel, VectorModel
 from ..utils import download_resource, get_options, get_output_path, get_temp_dir
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["Vector Commands"])
+router = APIRouter(tags=["Vector Commands"], dependencies=[Depends(get_api_key)])
 
 
 async def gdal_vector(tmp: Path, params: VectorModel, command: str) -> FileResponse:
@@ -24,7 +25,7 @@ async def gdal_vector(tmp: Path, params: VectorModel, command: str) -> FileRespo
     params.input = await download_resource(input_path, params.input)
     options = get_options(params)
     cmd = ["gdal", "vector", command, "--quiet", *options]
-    logger.info(f"Running command: {' '.join(cmd)}")
+    logger.info("Running command: %s", " ".join(cmd))
     proc = await create_subprocess_exec(*cmd)
     await proc.wait()
     output_path = await get_output_path(output_path)
