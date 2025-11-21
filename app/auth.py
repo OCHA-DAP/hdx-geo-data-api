@@ -13,6 +13,9 @@ api_key_header = APIKeyHeader(name="Authorization", auto_error=False)
 
 async def get_api_key(request: Request, api_key: str = Security(api_key_header)) -> str:
     """Authorize the API key in the header through the CKAN token endpoint."""
+    # This is a piece of logic that isn't used yet.
+    # When nginx caching is enabled, nginx will need to do an authorization request
+    # before serving data from the cache and mixpanel will want to know about it.
     request.state.is_nginx_verify_request = False
     if not api_key:
         raise HTTPException(
