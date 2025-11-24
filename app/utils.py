@@ -29,12 +29,15 @@ async def create_sozip(input_path: Path, output_path: Path) -> Path:
 
 async def get_filename(client: AsyncClient, download_url: str) -> str:
     """Get the filename from the response headers."""
-    r = await client.head(download_url)
-    content_disposition = r.headers.get("Content-Disposition")
-    if content_disposition:
-        filename_match = search(r'filename="?([^"]+)"?', content_disposition)
-        if filename_match:
-            return filename_match.group(1)
+    try:
+        r = await client.head(download_url)
+        content_disposition = r.headers.get("Content-Disposition")
+        if content_disposition:
+            filename_match = search(r'filename="?([^"]+)"?', content_disposition)
+            if filename_match:
+                return filename_match.group(1)
+    except Exception as e:  # noqa: BLE001
+        logger.warning("Error getting filename: %s", e)
     return download_url.split("/")[-1]
 
 
