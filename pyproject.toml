@@ -7,9 +7,10 @@ requires-python = ">=3.13"
 dependencies = [
     "fastapi[standard]",
     "httpx[http2]",
+    "mixpanel",
     "python-dotenv",
     "python-json-logger",
-    "mixpanel",
+    "python-magic",
     "ua-parser",
 ]
 

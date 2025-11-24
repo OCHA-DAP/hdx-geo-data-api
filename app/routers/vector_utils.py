@@ -5,6 +5,7 @@ from pathlib import Path
 from fastapi import HTTPException, status
 from fastapi.responses import FileResponse, JSONResponse
 from httpx import HTTPStatusError
+from magic import from_file as magic_from_file
 
 from ..models import Info, VectorFile
 from ..utils import (
@@ -45,10 +46,8 @@ def add_default_options(options: list[str], params: VectorFile) -> list[str]:
 
 async def vector_json(tmp: Path, params: Info, command: str) -> JSONResponse:
     """Endpoint to convert a vector file to another format."""
-    input_path = tmp / "input"
-    input_path.mkdir()
     try:
-        params.input = await download_resource(input_path, params.input)
+        params.input = await download_resource(tmp, params.input)
     except HTTPStatusError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -68,13 +67,11 @@ async def vector_json(tmp: Path, params: Info, command: str) -> JSONResponse:
 
 async def vector_file(tmp: Path, params: VectorFile, command: str) -> FileResponse:
     """Endpoint to convert a vector file to another format."""
-    input_path = tmp / "input"
-    input_path.mkdir()
     output_path = tmp / "output" / params.output
     output_path.parent.mkdir()
     params.output = str(output_path)
     try:
-        params.input = await download_resource(input_path, params.input)
+        params.input = await download_resource(tmp, params.input)
     except HTTPStatusError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -97,4 +94,5 @@ async def vector_file(tmp: Path, params: VectorFile, command: str) -> FileRespon
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         ) from e
-    return FileResponse(output_path, filename=output_path.name)
+    media_type = magic_from_file(output_path, mime=True)
+    return FileResponse(output_path, media_type=media_type, filename=output_path.name)

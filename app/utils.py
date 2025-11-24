@@ -3,9 +3,9 @@ from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 from collections.abc import AsyncGenerator
 from pathlib import Path
-from re import IGNORECASE, findall
+from re import IGNORECASE, findall, search
 from tempfile import TemporaryDirectory
-from zipfile import ZipFile
+from zipfile import ZipFile, is_zipfile
 
 from httpx import AsyncClient
 from pydantic import BaseModel
@@ -27,6 +27,17 @@ async def create_sozip(input_path: Path, output_path: Path) -> Path:
     return output_zip
 
 
+async def get_filename(client: AsyncClient, download_url: str) -> str:
+    """Get the filename from the response headers."""
+    r = await client.head(download_url)
+    content_disposition = r.headers.get("Content-Disposition")
+    if content_disposition:
+        filename_match = search(r'filename="?([^"]+)"?', content_disposition)
+        if filename_match:
+            return filename_match.group(1)
+    return download_url.split("/")[-1]
+
+
 async def download_resource(tmp_dir: Path, resource_id: str) -> str:
     """Get the download URL for a resource."""
     async with AsyncClient(
@@ -34,18 +45,22 @@ async def download_resource(tmp_dir: Path, resource_id: str) -> str:
         timeout=TIMEOUT,
         follow_redirects=True,
     ) as client:
+        input_path = tmp_dir / "input"
+        input_path.mkdir()
         uuid = get_last_uuid_v4(resource_id)
         r1 = await client.get(f"{HDX_URL}/api/3/action/resource_show?id={uuid}")
         r1.raise_for_status()
         download_url = r1.json()["result"]["download_url"]
-        input_file = tmp_dir / download_url.split("/")[-1]
+        filename = await get_filename(client, download_url)
+        input_file = input_path / filename
         with input_file.open("wb") as f:
             async with client.stream("GET", download_url) as r2:
                 r2.raise_for_status()
                 async for chunk in r2.aiter_bytes():
                     f.write(chunk)
-        if input_file.suffix == ".zip":
-            unzip_dir = input_file.with_suffix("")
+        if is_zipfile(input_file):
+            unzip_dir = tmp_dir / "unzip"
+            unzip_dir.mkdir()
             unzip_flat(input_file, unzip_dir)
             return str(unzip_dir)
         return str(input_file)
