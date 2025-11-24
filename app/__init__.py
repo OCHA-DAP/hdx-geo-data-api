@@ -3,15 +3,17 @@ from collections.abc import Callable
 from fastapi import FastAPI, Request
 
 from .config import DOCS_URL, OPENAPI_URL, PREFIX, REDOC_URL
+from .docs import app_description
 from .middleware.mixpanel import mixpanel_tracking
 from .routers import health, vector
 
-routers = [health, vector]
+routers = [vector, health]
 
 app = FastAPI(
+    description=app_description,
     docs_url=DOCS_URL,
-    redoc_url=REDOC_URL,
     openapi_url=OPENAPI_URL,
+    redoc_url=REDOC_URL,
 )
 
 

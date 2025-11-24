@@ -1,31 +1,19 @@
+import logging
 from asyncio import create_subprocess_exec
+from asyncio.subprocess import PIPE
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from zipfile import ZipFile
 
-from fastapi import HTTPException, status
 from httpx import AsyncClient
+from pydantic import BaseModel
 
 from .config import HDX_URL, TIMEOUT
-from .models import InfoModel, VectorFileModel
 
-TARGET_ARCGIS_VERSION = "--layer-creation-option=TARGET_ARCGIS_VERSION="
-COMPRESSION = "--layer-creation-option=COMPRESSION="
-ENCODING = "--layer-creation-option=ENCODING="
+logger = logging.getLogger(__name__)
 
-
-def add_default_options(options: list[str], params: VectorFileModel) -> list[str]:
-    """Add default options."""
-    response = [*options]
-    suffixes = Path(params.output).suffixes
-    if ".gdb" in suffixes and TARGET_ARCGIS_VERSION not in "".join(options):
-        response.append(f"{TARGET_ARCGIS_VERSION}ARCGIS_PRO_3_2_OR_LATER")
-    if ".parquet" in suffixes and COMPRESSION not in "".join(options):
-        response.append(f"{COMPRESSION}ZSTD")
-    if ".shp" in suffixes and ENCODING not in "".join(options):
-        response.append(f"{ENCODING}UTF-8")
-    return response
+SEGMENTATION_FAULT = -11
 
 
 async def create_sozip(input_path: Path, output_path: Path) -> Path:
@@ -38,15 +26,6 @@ async def create_sozip(input_path: Path, output_path: Path) -> Path:
     )
     await sozip.wait()
     return output_zip
-
-
-def unzip_flat(input_file: Path, output_dir: Path) -> None:
-    """Unzip a file to a flat directory."""
-    with ZipFile(input_file) as z:
-        for member in z.infolist():
-            if Path(member.filename).name:
-                member.filename = Path(member.filename).name
-                z.extract(member=member, path=output_dir)
 
 
 async def download_resource(tmp_dir: Path, resource_id: str) -> str:
@@ -71,7 +50,7 @@ async def download_resource(tmp_dir: Path, resource_id: str) -> str:
         return str(input_file)
 
 
-def get_options(params: VectorFileModel | InfoModel) -> list[str]:
+def get_options(params: BaseModel) -> list[str]:
     """Format the options."""
     options = []
     for opt_name in params.model_fields_set:
@@ -83,18 +62,15 @@ def get_options(params: VectorFileModel | InfoModel) -> list[str]:
             options.append(f"--{cli_name}")
         else:
             options.append(f"--{cli_name}={value}")
-    if isinstance(params, InfoModel):
-        return options
-    return add_default_options(options, params)
+    return options
 
 
 async def get_output_path(output_path: Path) -> Path:
     """Get the output path."""
     if output_path.stat().st_size == 0:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Unprocessable Content",
-        )
+        error = "Output file does not exist."
+        logger.error(error)
+        raise RuntimeError(error)
     if output_path.is_dir():
         output_path = await create_sozip(output_path, output_path)
     elif len(list(output_path.parent.glob("*"))) > 1:
@@ -106,3 +82,31 @@ async def get_temp_dir() -> AsyncGenerator[Path]:
     """Get a temporary directory."""
     temp_dir = TemporaryDirectory()
     yield Path(temp_dir.name)
+
+
+async def run_command_and_check(cmd: list[str]) -> str:
+    """Execute a command, captures stdout, and raises a detailed Exception."""
+    proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+    stdout_data, stderr_data = await proc.communicate()
+    stdout_str = stdout_data.decode().strip()
+    stderr_str = stderr_data.decode().strip()
+    if proc.returncode != 0:
+        if proc.returncode == SEGMENTATION_FAULT and not stderr_str:
+            stderr_str = "segmentation fault"
+        error = (
+            f"Command failed with exit code: {proc.returncode}. "
+            f"Command: {' '.join(cmd)}. "
+            f"Stderr: {stderr_str}"
+        )
+        logger.error(error)
+        raise RuntimeError(error)
+    return stdout_str
+
+
+def unzip_flat(input_file: Path, output_dir: Path) -> None:
+    """Unzip a file to a flat directory."""
+    with ZipFile(input_file) as z:
+        for member in z.infolist():
+            if Path(member.filename).name:
+                member.filename = Path(member.filename).name
+                z.extract(member=member, path=output_dir)
