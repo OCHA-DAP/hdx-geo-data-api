@@ -157,6 +157,8 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
+ua-generator==2.0.18
+    # via hdx-geo-data-api
 ua-parser==1.0.1
     # via hdx-geo-data-api
 ua-parser-builtins==0.18.0.post1

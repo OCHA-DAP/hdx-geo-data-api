@@ -312,6 +312,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "python-json-logger" },
     { name = "python-magic" },
+    { name = "ua-generator" },
     { name = "ua-parser" },
 ]
 
@@ -330,6 +331,7 @@ requires-dist = [
     { name = "python-dotenv" },
     { name = "python-json-logger" },
     { name = "python-magic" },
+    { name = "ua-generator" },
     { name = "ua-parser" },
 ]
 
@@ -989,6 +991,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/55/e3/70399cb7dd41c10ac53367ae42139cf4b1ca5f36bb3dc6c9d33acdb43655/typing_inspection-0.4.2.tar.gz", hash = "sha256:ba561c48a67c5958007083d386c3295464928b01faa735ab8547c5692e87f464", size = 75949, upload-time = "2025-10-01T02:14:41.687Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/dc/9b/47798a6c91d8bdb567fe2698fe81e0c6b7cb7ef4d13da4114b41d239f65d/typing_inspection-0.4.2-py3-none-any.whl", hash = "sha256:4ed1cacbdc298c220f1bd249ed5287caa16f34d44ef4e9c3d0cbad5b521545e7", size = 14611, upload-time = "2025-10-01T02:14:40.154Z" },
+]
+
+[[package]]
+name = "ua-generator"
+version = "2.0.18"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e7/67/f7bc7b90aea517a6b2ec406061e22e00c776cb5694d7cd26ff1f988547b2/ua_generator-2.0.18.tar.gz", hash = "sha256:82aa2706ba085046e9322f55a6f7c163682560584d5856ecee3abe9f9224bcfc", size = 28269, upload-time = "2025-11-09T09:03:33.985Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/58/a7/0ffa6c35165d3d6a439f8c006ba85de33111ade69678f6a5d113b81a05d3/ua_generator-2.0.18-py3-none-any.whl", hash = "sha256:050f8d8f50125b6702024488dd84caa430059a031b1708199430e56e00b21408", size = 32389, upload-time = "2025-11-09T09:03:32.578Z" },
 ]
 
 [[package]]

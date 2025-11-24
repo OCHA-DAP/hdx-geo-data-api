@@ -9,6 +9,7 @@ from zipfile import ZipFile, is_zipfile
 
 from httpx import AsyncClient
 from pydantic import BaseModel
+from ua_generator import generate as ua_generate
 
 from .config import HDX_URL, TIMEOUT
 
@@ -29,15 +30,12 @@ async def create_sozip(input_path: Path, output_path: Path) -> Path:
 
 async def get_filename(client: AsyncClient, download_url: str) -> str:
     """Get the filename from the response headers."""
-    try:
-        r = await client.head(download_url)
-        content_disposition = r.headers.get("Content-Disposition")
-        if content_disposition:
-            filename_match = search(r'filename="?([^"]+)"?', content_disposition)
-            if filename_match:
-                return filename_match.group(1)
-    except Exception as e:  # noqa: BLE001
-        logger.warning("Error getting filename: %s", e)
+    r = await client.head(download_url)
+    content_disposition = r.headers.get("Content-Disposition")
+    if content_disposition:
+        filename_match = search(r'filename="?([^"]+)"?', content_disposition)
+        if filename_match:
+            return filename_match.group(1)
     return download_url.split("/")[-1]
 
 
@@ -57,7 +55,8 @@ async def download_resource(tmp_dir: Path, resource_id: str) -> str:
         filename = await get_filename(client, download_url)
         input_file = input_path / filename
         with input_file.open("wb") as f:
-            async with client.stream("GET", download_url) as r2:
+            headers = ua_generate().headers.get()
+            async with client.stream("GET", download_url, headers=headers) as r2:
                 r2.raise_for_status()
                 async for chunk in r2.aiter_bytes():
                     f.write(chunk)
