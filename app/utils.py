@@ -3,6 +3,7 @@ from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 from collections.abc import AsyncGenerator
 from pathlib import Path
+from re import IGNORECASE, findall
 from tempfile import TemporaryDirectory
 from zipfile import ZipFile
 
@@ -12,8 +13,6 @@ from pydantic import BaseModel
 from .config import HDX_URL, TIMEOUT
 
 logger = logging.getLogger(__name__)
-
-SEGMENTATION_FAULT = -11
 
 
 async def create_sozip(input_path: Path, output_path: Path) -> Path:
@@ -35,19 +34,32 @@ async def download_resource(tmp_dir: Path, resource_id: str) -> str:
         timeout=TIMEOUT,
         follow_redirects=True,
     ) as client:
-        r = await client.get(f"{HDX_URL}/api/3/action/resource_show?id={resource_id}")
-        download_url = r.json()["result"]["download_url"]
+        uuid = get_last_uuid_v4(resource_id)
+        r1 = await client.get(f"{HDX_URL}/api/3/action/resource_show?id={uuid}")
+        r1.raise_for_status()
+        download_url = r1.json()["result"]["download_url"]
         input_file = tmp_dir / download_url.split("/")[-1]
         with input_file.open("wb") as f:
-            async with client.stream("GET", download_url) as r:
-                r.raise_for_status()
-                async for chunk in r.aiter_bytes():
+            async with client.stream("GET", download_url) as r2:
+                r2.raise_for_status()
+                async for chunk in r2.aiter_bytes():
                     f.write(chunk)
         if input_file.suffix == ".zip":
             unzip_dir = input_file.with_suffix("")
             unzip_flat(input_file, unzip_dir)
             return str(unzip_dir)
         return str(input_file)
+
+
+def get_last_uuid_v4(text: str) -> str | None:
+    """Find and returns the last instance of a UUID v4 string in the given text."""
+    uuid_v4_pattern = (
+        r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
+    )
+    all_matches = findall(uuid_v4_pattern, text, IGNORECASE)
+    if all_matches:
+        return all_matches[-1]
+    return None
 
 
 def get_options(params: BaseModel) -> list[str]:
@@ -86,12 +98,13 @@ async def get_temp_dir() -> AsyncGenerator[Path]:
 
 async def run_command_and_check(cmd: list[str]) -> str:
     """Execute a command, captures stdout, and raises a detailed Exception."""
+    segmentation_fault = -11
     proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
     stdout_data, stderr_data = await proc.communicate()
     stdout_str = stdout_data.decode().strip()
     stderr_str = stderr_data.decode().strip()
     if proc.returncode != 0:
-        if proc.returncode == SEGMENTATION_FAULT and not stderr_str:
+        if proc.returncode == segmentation_fault and not stderr_str:
             stderr_str = "segmentation fault"
         error = (
             f"Command failed with exit code: {proc.returncode}. "

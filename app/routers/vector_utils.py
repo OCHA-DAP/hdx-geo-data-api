@@ -4,6 +4,7 @@ from pathlib import Path
 
 from fastapi import HTTPException, status
 from fastapi.responses import FileResponse, JSONResponse
+from httpx import HTTPStatusError
 
 from ..models import Info, VectorFile
 from ..utils import (
@@ -46,7 +47,13 @@ async def vector_json(tmp: Path, params: Info, command: str) -> JSONResponse:
     """Endpoint to convert a vector file to another format."""
     input_path = tmp / "input"
     input_path.mkdir()
-    params.input = await download_resource(input_path, params.input)
+    try:
+        params.input = await download_resource(input_path, params.input)
+    except HTTPStatusError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        ) from e
     options = get_options(params)
     cmd = ["gdal", "vector", command, "--output-format=json", *options]
     try:
@@ -66,7 +73,13 @@ async def vector_file(tmp: Path, params: VectorFile, command: str) -> FileRespon
     output_path = tmp / "output" / params.output
     output_path.parent.mkdir()
     params.output = str(output_path)
-    params.input = await download_resource(input_path, params.input)
+    try:
+        params.input = await download_resource(input_path, params.input)
+    except HTTPStatusError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        ) from e
     options = get_options(params)
     options = add_default_options(options, params)
     cmd = ["gdal", "vector", command, *options]
