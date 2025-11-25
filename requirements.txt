@@ -38,7 +38,7 @@ fastapi==0.122.0
     # via hdx-geo-data-api
 fastapi-cli==0.0.16
     # via fastapi
-fastapi-cloud-cli==0.5.1
+fastapi-cloud-cli==0.5.2
     # via fastapi-cli
 fastar==0.7.0
     # via fastapi-cloud-cli

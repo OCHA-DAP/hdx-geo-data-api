@@ -63,6 +63,8 @@ async def download_resource(tmp_dir: Path, resource_id: str) -> str:
         if is_zipfile(input_file):
             unzip_dir = tmp_dir / "unzip"
             unzip_dir.mkdir()
+            if input_file.suffix == ".zip":
+                unzip_dir = unzip_dir / input_file.with_suffix("")
             unzip_flat(input_file, unzip_dir)
             return str(unzip_dir)
         return str(input_file)
