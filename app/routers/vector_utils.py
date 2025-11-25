@@ -18,39 +18,50 @@ from ..utils import (
 
 logger = logging.getLogger(__name__)
 
-COMPRESSION = "--layer-creation-option=COMPRESSION="
-COMPRESSION_LEVEL = "--layer-creation-option=COMPRESSION_LEVEL="
-ENCODING = "--layer-creation-option=ENCODING="
-TARGET_ARCGIS_VERSION = "--layer-creation-option=TARGET_ARCGIS_VERSION="
-
-geo_content_types = {
-    ".fgb": "application/flatgeobuf",
-    ".geojson": "application/geo+json",
-    ".gpx": "application/gpx+xml",
-    ".kml": "application/vnd.google-earth.kml+xml",
-    ".kmz": "application/vnd.google-earth.kmz",
-}
-
 
 def add_default_options(options: list[str], params: VectorFile) -> list[str]:
     """Add default options."""
+    compression = "--layer-creation-option=COMPRESSION="
+    compression_level = "--layer-creation-option=COMPRESSION_LEVEL="
+    encoding = "--layer-creation-option=ENCODING="
+    target_arcgis_version = "--layer-creation-option=TARGET_ARCGIS_VERSION="
     response = [*options]
     suffixes = Path(params.output).suffixes
     output_format = params.output_format
     if (
         ".gdb" in suffixes or output_format == "OpenFileGDB"
-    ) and TARGET_ARCGIS_VERSION not in "".join(options):
-        response.append(f"{TARGET_ARCGIS_VERSION}ARCGIS_PRO_3_2_OR_LATER")
+    ) and target_arcgis_version not in "".join(options):
+        response.append(f"{target_arcgis_version}ARCGIS_PRO_3_2_OR_LATER")
     if ".parquet" in suffixes or output_format == "Parquet":
-        if COMPRESSION not in "".join(options):
-            response.append(f"{COMPRESSION}ZSTD")
-        if COMPRESSION_LEVEL not in "".join(options):
-            response.append(f"{COMPRESSION_LEVEL}15")
+        if compression not in "".join(options):
+            response.append(f"{compression}ZSTD")
+        if compression_level not in "".join(options):
+            response.append(f"{compression_level}15")
     if (
         ".shp" in suffixes or output_format == "ESRI Shapefile"
-    ) and ENCODING not in "".join(options):
-        response.append(f"{ENCODING}UTF-8")
+    ) and encoding not in "".join(options):
+        response.append(f"{encoding}UTF-8")
     return response
+
+
+def get_media_type(output_path: Path) -> str:
+    """Get the media type of a file."""
+    geo_content_types = {
+        ".fgb": "application/flatgeobuf",
+        ".geojson": "application/geo+json",
+        ".gpx": "application/gpx+xml",
+        ".kml": "application/vnd.google-earth.kml+xml",
+        ".kmz": "application/vnd.google-earth.kmz",
+    }
+    media_type = get_content_type(output_path)
+    if media_type == "application/octet-stream":
+        media_type = geo_content_types.get(
+            output_path.suffix,
+            "application/octet-stream",
+        )
+    if media_type == "application/octet-stream":
+        media_type = magic_from_file(output_path, mime=True)
+    return media_type
 
 
 async def vector_json(tmp: Path, params: Info, command: str) -> JSONResponse:
@@ -103,12 +114,5 @@ async def vector_file(tmp: Path, params: VectorFile, command: str) -> FileRespon
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         ) from e
-    media_type = get_content_type(output_path)
-    if media_type == "application/octet-stream":
-        media_type = geo_content_types.get(
-            output_path.suffix,
-            "application/octet-stream",
-        )
-    if media_type == "application/octet-stream":
-        media_type = magic_from_file(output_path, mime=True)
+    media_type = get_media_type(output_path)
     return FileResponse(output_path, media_type=media_type, filename=output_path.name)
