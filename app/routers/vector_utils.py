@@ -2,6 +2,7 @@ import logging
 from json import loads
 from pathlib import Path
 
+from content_types import get_content_type
 from fastapi import HTTPException, status
 from fastapi.responses import FileResponse, JSONResponse
 from httpx import HTTPStatusError
@@ -21,6 +22,14 @@ COMPRESSION = "--layer-creation-option=COMPRESSION="
 COMPRESSION_LEVEL = "--layer-creation-option=COMPRESSION_LEVEL="
 ENCODING = "--layer-creation-option=ENCODING="
 TARGET_ARCGIS_VERSION = "--layer-creation-option=TARGET_ARCGIS_VERSION="
+
+geo_content_types = {
+    ".fgb": "application/flatgeobuf",
+    ".geojson": "application/geo+json",
+    ".gpx": "application/gpx+xml",
+    ".kml": "application/vnd.google-earth.kml+xml",
+    ".kmz": "application/vnd.google-earth.kmz",
+}
 
 
 def add_default_options(options: list[str], params: VectorFile) -> list[str]:
@@ -94,5 +103,12 @@ async def vector_file(tmp: Path, params: VectorFile, command: str) -> FileRespon
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         ) from e
-    media_type = magic_from_file(output_path, mime=True)
+    media_type = get_content_type(output_path)
+    if media_type == "application/octet-stream":
+        media_type = geo_content_types.get(
+            output_path.suffix,
+            "application/octet-stream",
+        )
+    if media_type == "application/octet-stream":
+        media_type = magic_from_file(output_path, mime=True)
     return FileResponse(output_path, media_type=media_type, filename=output_path.name)

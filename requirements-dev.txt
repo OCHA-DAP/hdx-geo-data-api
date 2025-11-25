@@ -31,6 +31,8 @@ colorama==0.4.6
     #   click
     #   taskipy
     #   uvicorn
+content-types==0.3.0
+    # via hdx-geo-data-api
 distlib==0.4.0
     # via virtualenv
 dnspython==2.8.0
