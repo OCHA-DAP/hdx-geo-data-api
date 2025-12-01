@@ -40,7 +40,7 @@ fastapi-cli==0.0.16
     # via fastapi
 fastapi-cloud-cli==0.5.1
     # via fastapi-cli
-fastar==0.6.0
+fastar==0.8.0
     # via fastapi-cloud-cli
 h11==0.16.0
     # via
