@@ -39,7 +39,7 @@ email-validator==2.3.0
     # via
     #   fastapi
     #   pydantic
-fastapi==0.121.3
+fastapi==0.123.0
     # via hdx-geo-data-api
 fastapi-cli==0.0.16
     # via fastapi
