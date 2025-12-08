@@ -130,7 +130,7 @@ rich-toolkit==0.16.0
 rignore==0.7.6
     # via fastapi-cloud-cli
 ruff==0.14.5
-sentry-sdk==2.45.0
+sentry-sdk==2.47.0
     # via fastapi-cloud-cli
 shellingham==1.5.4
     # via typer
