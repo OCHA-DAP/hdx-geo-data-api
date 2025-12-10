@@ -1,6 +1,7 @@
 from collections.abc import Callable
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
 from .config import DOCS_URL, OPENAPI_URL, PREFIX, REDOC_URL
 from .docs import app_description
@@ -14,6 +15,14 @@ app = FastAPI(
     docs_url=DOCS_URL,
     openapi_url=OPENAPI_URL,
     redoc_url=REDOC_URL,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
