@@ -3,7 +3,7 @@ from collections.abc import Callable
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import DOCS_URL, OPENAPI_URL, PREFIX, REDOC_URL
+from .config import DOCS_URL, HDX_URL, LOGGING_CONF_FILE, OPENAPI_URL, PREFIX, REDOC_URL
 from .docs import app_description
 from .middleware.mixpanel import mixpanel_tracking
 from .routers import health, vector
@@ -16,6 +16,9 @@ app = FastAPI(
     openapi_url=OPENAPI_URL,
     redoc_url=REDOC_URL,
 )
+
+if LOGGING_CONF_FILE == "logging.conf":
+    app.servers = [{"url": HDX_URL}]
 
 app.add_middleware(
     CORSMiddleware,

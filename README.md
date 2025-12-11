@@ -6,21 +6,15 @@ This API provides an interface to query and retrieve humanitarian geographical d
 
 ### Environment
 
-Development is currently done using Python 3.13. We recommend using uv to create a virtual environment and install all packages:
+[uv](https://github.com/astral-sh/uv) is used for package management with development done using Python >=3.13. Pre-commit formatting follows [ruff](https://docs.astral.sh/ruff/) guidelines. To get set up:
 
 ```shell
-    uv sync && source .venv/bin/activate
+    uv sync
+    source .venv/bin/activate
+    pre-commit install
 ```
 
-### Pre-commit
-
-Be sure to install `pre-commit`, which is run every time you make a git commit. With pre-commit, all code is formatted according to [ruff](https://docs.astral.sh/ruff/) guidelines.
-
-```shell
-    uv run pre-commit install
-```
-
-### Running
+### Running API
 
 This API can be run natively with the following command:
 
@@ -33,3 +27,11 @@ Alternatively, it can be run with Docker using:
 ```shell
 docker compose up --build
 ```
+
+## Configuration
+
+### Environment Variables
+
+- `HDX_URL` (required): This determins which HDX site is used to perform authentication and to fetch data from.
+- `MIXPANEL_TOKEN` (required for production): enables MixPanel tracking.
+- `LOGGING_CONF_FILE` (required for development): By default this is set to `logging.conf`. For development this should be changed to `logging_dev.conf`.
