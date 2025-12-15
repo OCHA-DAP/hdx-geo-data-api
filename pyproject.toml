@@ -5,11 +5,14 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "content-types",
     "fastapi[standard]",
     "httpx[http2]",
+    "mixpanel",
     "python-dotenv",
     "python-json-logger",
-    "mixpanel",
+    "python-magic",
+    "ua-generator",
     "ua-parser",
 ]
 

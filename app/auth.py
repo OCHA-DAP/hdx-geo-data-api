@@ -19,7 +19,7 @@ async def get_api_key(request: Request, api_key: str = Security(api_key_header))
     request.state.is_nginx_verify_request = False
     if not api_key:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail=(
                 "Not authenticated, please include an 'Authorization' key in the "
                 "header with a valid HDX API token"

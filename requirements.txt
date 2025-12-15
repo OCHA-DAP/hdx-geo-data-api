@@ -4,7 +4,7 @@ annotated-doc==0.0.4
     # via fastapi
 annotated-types==0.7.0
     # via pydantic
-anyio==4.11.0
+anyio==4.12.0
     # via
     #   httpx
     #   starlette
@@ -28,19 +28,21 @@ colorama==0.4.6 ; sys_platform == 'win32'
     # via
     #   click
     #   uvicorn
+content-types==0.3.0
+    # via hdx-geo-data-api
 dnspython==2.8.0
     # via email-validator
 email-validator==2.3.0
     # via
     #   fastapi
     #   pydantic
-fastapi==0.121.3
+fastapi==0.124.2
     # via hdx-geo-data-api
 fastapi-cli==0.0.16
     # via fastapi
-fastapi-cloud-cli==0.5.1
+fastapi-cloud-cli==0.6.0
     # via fastapi-cli
-fastar==0.6.0
+fastar==0.8.0
     # via fastapi-cloud-cli
 h11==0.16.0
     # via
@@ -78,7 +80,7 @@ mdurl==0.1.2
     # via markdown-it-py
 mixpanel==5.0.0
     # via hdx-geo-data-api
-pydantic==2.12.4
+pydantic==2.12.5
     # via
     #   fastapi
     #   fastapi-cloud-cli
@@ -93,6 +95,8 @@ python-dotenv==1.2.1
     #   uvicorn
 python-json-logger==4.0.0
     # via hdx-geo-data-api
+python-magic==0.4.27
+    # via hdx-geo-data-api
 python-multipart==0.0.20
     # via fastapi
 pyyaml==6.0.3
@@ -103,18 +107,16 @@ rich==14.2.0
     # via
     #   rich-toolkit
     #   typer
-rich-toolkit==0.16.0
+rich-toolkit==0.17.0
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
 rignore==0.7.6
     # via fastapi-cloud-cli
-sentry-sdk==2.45.0
+sentry-sdk==2.47.0
     # via fastapi-cloud-cli
 shellingham==1.5.4
     # via typer
-sniffio==1.3.1
-    # via anyio
 starlette==0.50.0
     # via fastapi
 typer==0.20.0
@@ -131,11 +133,13 @@ typing-extensions==4.15.0
     #   typing-inspection
 typing-inspection==0.4.2
     # via pydantic
+ua-generator==2.0.19
+    # via hdx-geo-data-api
 ua-parser==1.0.1
     # via hdx-geo-data-api
 ua-parser-builtins==0.18.0.post1
     # via ua-parser
-urllib3==2.5.0
+urllib3==2.6.1
     # via
     #   requests
     #   sentry-sdk

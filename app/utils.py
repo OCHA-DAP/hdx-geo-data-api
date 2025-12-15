@@ -1,31 +1,19 @@
+import logging
 from asyncio import create_subprocess_exec
+from asyncio.subprocess import PIPE
 from collections.abc import AsyncGenerator
 from pathlib import Path
+from re import IGNORECASE, findall, search
 from tempfile import TemporaryDirectory
-from zipfile import ZipFile
+from zipfile import ZipFile, is_zipfile
 
-from fastapi import HTTPException, status
 from httpx import AsyncClient
+from pydantic import BaseModel
+from ua_generator import generate as ua_generate
 
 from .config import HDX_URL, TIMEOUT
-from .models import VectorModel
 
-TARGET_ARCGIS_VERSION = "--layer-creation-option=TARGET_ARCGIS_VERSION="
-COMPRESSION = "--layer-creation-option=COMPRESSION="
-ENCODING = "--layer-creation-option=ENCODING="
-
-
-def add_default_options(options: list[str], params: VectorModel) -> list[str]:
-    """Add default options."""
-    response = [*options]
-    suffixes = Path(params.output).suffixes
-    if ".gdb" in suffixes and TARGET_ARCGIS_VERSION not in "".join(options):
-        response.append(f"{TARGET_ARCGIS_VERSION}ARCGIS_PRO_3_2_OR_LATER")
-    if ".parquet" in suffixes and COMPRESSION not in "".join(options):
-        response.append(f"{COMPRESSION}ZSTD")
-    if ".shp" in suffixes and ENCODING not in "".join(options):
-        response.append(f"{ENCODING}UTF-8")
-    return response
+logger = logging.getLogger(__name__)
 
 
 async def create_sozip(input_path: Path, output_path: Path) -> Path:
@@ -40,13 +28,15 @@ async def create_sozip(input_path: Path, output_path: Path) -> Path:
     return output_zip
 
 
-def unzip_flat(input_file: Path, output_dir: Path) -> None:
-    """Unzip a file to a flat directory."""
-    with ZipFile(input_file) as z:
-        for member in z.infolist():
-            if Path(member.filename).name:
-                member.filename = Path(member.filename).name
-                z.extract(member=member, path=output_dir)
+async def get_filename(client: AsyncClient, download_url: str) -> str:
+    """Get the filename from the response headers."""
+    r = await client.head(download_url)
+    content_disposition = r.headers.get("Content-Disposition")
+    if content_disposition:
+        filename_match = search(r'filename="?([^"]+)"?', content_disposition)
+        if filename_match:
+            return filename_match.group(1)
+    return download_url.split("/")[-1]
 
 
 async def download_resource(tmp_dir: Path, resource_id: str) -> str:
@@ -56,40 +46,62 @@ async def download_resource(tmp_dir: Path, resource_id: str) -> str:
         timeout=TIMEOUT,
         follow_redirects=True,
     ) as client:
-        r = await client.get(f"{HDX_URL}/api/3/action/resource_show?id={resource_id}")
-        download_url = r.json()["result"]["download_url"]
-        input_file = tmp_dir / download_url.split("/")[-1]
+        input_path = tmp_dir / "input"
+        input_path.mkdir()
+        uuid = get_last_uuid_v4(resource_id)
+        r1 = await client.get(f"{HDX_URL}/api/3/action/resource_show?id={uuid}")
+        r1.raise_for_status()
+        download_url = r1.json()["result"]["download_url"]
+        filename = await get_filename(client, download_url)
+        input_file = input_path / filename
         with input_file.open("wb") as f:
-            async with client.stream("GET", download_url) as r:
-                r.raise_for_status()
-                async for chunk in r.aiter_bytes():
+            headers = ua_generate().headers.get()
+            async with client.stream("GET", download_url, headers=headers) as r2:
+                r2.raise_for_status()
+                async for chunk in r2.aiter_bytes():
                     f.write(chunk)
-        if input_file.suffix == ".zip":
-            unzip_dir = input_file.with_suffix("")
+        if is_zipfile(input_file):
+            unzip_dir = tmp_dir / "unzip"
+            unzip_dir.mkdir()
+            if input_file.suffix == ".zip":
+                unzip_dir = unzip_dir / input_file.with_suffix("")
             unzip_flat(input_file, unzip_dir)
             return str(unzip_dir)
         return str(input_file)
 
 
-def get_options(params: VectorModel) -> list[str]:
+def get_last_uuid_v4(text: str) -> str | None:
+    """Find and returns the last instance of a UUID v4 string in the given text."""
+    uuid_v4_pattern = (
+        r"[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
+    )
+    all_matches = findall(uuid_v4_pattern, text, IGNORECASE)
+    if all_matches:
+        return all_matches[-1]
+    return None
+
+
+def get_options(params: BaseModel) -> list[str]:
     """Format the options."""
     options = []
     for opt_name in params.model_fields_set:
-        opt = getattr(params, opt_name)
-        if isinstance(opt, list):
-            options.extend([f"--{opt_name.replace('_', '-')}={x}" for x in opt])
+        cli_name = opt_name.replace("_", "-")
+        value = getattr(params, opt_name)
+        if isinstance(value, list):
+            options.extend([f"--{cli_name}={x}" for x in value])
+        elif isinstance(value, bool) and value:
+            options.append(f"--{cli_name}")
         else:
-            options.append(f"--{opt_name.replace('_', '-')}={opt}")
-    return add_default_options(options, params)
+            options.append(f"--{cli_name}={value}")
+    return options
 
 
 async def get_output_path(output_path: Path) -> Path:
     """Get the output path."""
     if output_path.stat().st_size == 0:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Unprocessable Content",
-        )
+        error = "Output file does not exist."
+        logger.error(error)
+        raise RuntimeError(error)
     if output_path.is_dir():
         output_path = await create_sozip(output_path, output_path)
     elif len(list(output_path.parent.glob("*"))) > 1:
@@ -101,3 +113,32 @@ async def get_temp_dir() -> AsyncGenerator[Path]:
     """Get a temporary directory."""
     temp_dir = TemporaryDirectory()
     yield Path(temp_dir.name)
+
+
+async def run_command_and_check(cmd: list[str]) -> str:
+    """Execute a command, captures stdout, and raises a detailed Exception."""
+    segmentation_fault = -11
+    proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+    stdout_data, stderr_data = await proc.communicate()
+    stdout_str = stdout_data.decode().strip()
+    stderr_str = stderr_data.decode().strip()
+    if proc.returncode != 0:
+        if proc.returncode == segmentation_fault and not stderr_str:
+            stderr_str = "segmentation fault"
+        error = (
+            f"Command failed with exit code: {proc.returncode}. "
+            f"Command: {' '.join(cmd)}. "
+            f"Stderr: {stderr_str}"
+        )
+        logger.error(error)
+        raise RuntimeError(error)
+    return stdout_str
+
+
+def unzip_flat(input_file: Path, output_dir: Path) -> None:
+    """Unzip a file to a flat directory."""
+    with ZipFile(input_file) as z:
+        for member in z.infolist():
+            if Path(member.filename).name:
+                member.filename = Path(member.filename).name
+                z.extract(member=member, path=output_dir)
