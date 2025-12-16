@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pre-commit", "ruff", "taskipy"]
+dev = ["pre-commit", "ruff", "taskipy", "pytest", "pytest-asyncio"]
 
 [tool.taskipy.tasks]
 # uv run task app
