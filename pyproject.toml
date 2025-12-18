@@ -17,10 +17,11 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pre-commit", "ruff", "taskipy"]
+dev = ["pre-commit", "ruff", "taskipy", "pytest", "pytest-asyncio"]
 
 [tool.taskipy.tasks]
-# uv run task app
+# e.g.: uv run task app
 app = "fastapi dev app"
+test = "pytest app"
 export = "uv sync -q && uv export -o requirements.txt -q --no-dev --no-emit-project --no-hashes && uv export -o requirements-dev.txt -q --no-emit-project --no-hashes"
 ruff = "ruff format && ruff check && ruff format"

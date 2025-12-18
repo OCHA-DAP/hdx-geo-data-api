@@ -36,11 +36,11 @@ email-validator==2.3.0
     # via
     #   fastapi
     #   pydantic
-fastapi==0.124.2
+fastapi==0.125.0
     # via hdx-geo-data-api
 fastapi-cli==0.0.16
     # via fastapi
-fastapi-cloud-cli==0.6.0
+fastapi-cloud-cli==0.7.0
     # via fastapi-cli
 fastar==0.8.0
     # via fastapi-cloud-cli
@@ -97,7 +97,7 @@ python-json-logger==4.0.0
     # via hdx-geo-data-api
 python-magic==0.4.27
     # via hdx-geo-data-api
-python-multipart==0.0.20
+python-multipart==0.0.21
     # via fastapi
 pyyaml==6.0.3
     # via uvicorn
@@ -107,13 +107,13 @@ rich==14.2.0
     # via
     #   rich-toolkit
     #   typer
-rich-toolkit==0.17.0
+rich-toolkit==0.17.1
     # via
     #   fastapi-cli
     #   fastapi-cloud-cli
 rignore==0.7.6
     # via fastapi-cloud-cli
-sentry-sdk==2.47.0
+sentry-sdk==2.48.0
     # via fastapi-cloud-cli
 shellingham==1.5.4
     # via typer
@@ -139,7 +139,7 @@ ua-parser==1.0.1
     # via hdx-geo-data-api
 ua-parser-builtins==0.18.0.post1
     # via ua-parser
-urllib3==2.6.1
+urllib3==2.6.2
     # via
     #   requests
     #   sentry-sdk
