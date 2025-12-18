@@ -1,6 +1,8 @@
+# ruff: noqa: ANN001, ARG001, PLR0913, S101, S108
 from unittest.mock import patch
 
 import pytest
+from fastapi import status
 
 from app.tests.utils.utils import create_mock_hdx_client
 
@@ -22,13 +24,13 @@ async def test_unauthenticated_request_creates_mixpanel_event(
     mock_mixpanel,
     mock_hash,
     async_client,
-):
+) -> None:
     """Unauthenticated request should create a Mixpanel event with visitor hash."""
     headers = {"User-Agent": USER_AGENT, "x-forwarded-for": IP_ADDRESS}
 
     response = await async_client.get(HEALTH_ENDPOINT, headers=headers)
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert mock_mixpanel.call_count == 1
 
     event_name, distinct_id, _ = mock_mixpanel.call_args[0]
@@ -43,8 +45,11 @@ async def test_unauthenticated_request_event_includes_request_metadata(
     mock_mixpanel,
     mock_hash,
     async_client,
-):
-    """Unauthenticated request event should include endpoint, response code, and request info."""
+) -> None:
+    """Unauthenticated request event test.
+
+    Should include endpoint, response code, and request info.
+    """
     headers = {"User-Agent": USER_AGENT, "x-forwarded-for": IP_ADDRESS}
 
     await async_client.get(HEALTH_ENDPOINT, headers=headers)
@@ -54,8 +59,8 @@ async def test_unauthenticated_request_event_includes_request_metadata(
     # Verify request metadata is present
     assert event_payload.get("endpoint path") == HEALTH_ENDPOINT
     assert event_payload.get("request type") == "standard"
-    assert event_payload.get("server side") == True
-    assert event_payload.get("response code") == 200
+    assert event_payload.get("server side")
+    assert event_payload.get("response code") == status.HTTP_200_OK
     assert event_payload.get("ip") == IP_ADDRESS
     assert event_payload.get("user agent") == USER_AGENT
 
@@ -77,7 +82,7 @@ async def test_authenticated_request_event_includes_hdx_metadata(
     mock_download,
     mock_hdx_client,
     async_client,
-):
+) -> None:
     """Authenticated request event should include HDX user metadata."""
     headers = {
         "Authorization": "valid-hdx-token",
@@ -92,7 +97,7 @@ async def test_authenticated_request_event_includes_hdx_metadata(
         headers=headers,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
 
     _, _, event_payload = mock_mixpanel.call_args[0]
     assert event_payload.get("app name") == "testapp"
@@ -112,7 +117,7 @@ async def test_authenticated_request_event_includes_request_metadata(
     mock_download,
     mock_hdx_client,
     async_client,
-):
+) -> None:
     """Authenticated request event should include all request metadata."""
     headers = {
         "Authorization": "valid-hdx-token",
@@ -126,8 +131,8 @@ async def test_authenticated_request_event_includes_request_metadata(
     _, _, event_payload = mock_mixpanel.call_args[0]
     assert event_payload.get("endpoint path") == VECTOR_INFO_ENDPOINT
     assert event_payload.get("request type") == "standard"
-    assert event_payload.get("server side") == True
-    assert event_payload.get("response code") == 200
+    assert event_payload.get("server side")
+    assert event_payload.get("response code") == status.HTTP_200_OK
     assert event_payload.get("ip") == IP_ADDRESS
     assert event_payload.get("user agent") == USER_AGENT
     assert event_payload.get("query params") == ["input", "limit"]
@@ -136,11 +141,14 @@ async def test_authenticated_request_event_includes_request_metadata(
 
 @pytest.mark.asyncio
 @patch("app.middleware.utils.send_mixpanel_event")
-async def test_docs_endpoint_excluded_from_tracking(mock_mixpanel, async_client):
+async def test_docs_endpoint_excluded_from_tracking(
+    mock_mixpanel,
+    async_client,
+) -> None:
     """Docs endpoint should not be tracked by Mixpanel."""
     docs_endpoint = "/docs"
 
     response = await async_client.get(docs_endpoint)
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     assert mock_mixpanel.call_count == 0

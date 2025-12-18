@@ -1,6 +1,8 @@
+# ruff: noqa: ANN001, ARG001, S101
 from unittest.mock import patch
 
 import pytest
+from fastapi import status
 
 from app.tests.utils.utils import create_mock_hdx_client
 
@@ -21,7 +23,7 @@ async def test_valid_authorization_header_allows_request(
     mock_run_cmd,
     mock_hdx_client,
     async_client,
-):
+) -> None:
     """Valid Authorization header should allow request and return 200."""
     response = await async_client.get(
         VECTOR_INFO_ENDPOINT,
@@ -29,7 +31,7 @@ async def test_valid_authorization_header_allows_request(
         headers=VALID_AUTH_HEADER,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.asyncio
@@ -43,7 +45,7 @@ async def test_valid_auth_header_populates_hdx_metadata(
     mock_run_cmd,
     mock_hdx_client,
     async_client,
-):
+) -> None:
     """Valid auth header should populate request with HDX user metadata."""
     await async_client.get(
         VECTOR_INFO_ENDPOINT,
@@ -53,14 +55,14 @@ async def test_valid_auth_header_populates_hdx_metadata(
 
     # Verify Mixpanel was called with HDX metadata
     assert mock_mixpanel.call_count == 1
-    event_name, distinct_id, event_payload = mock_mixpanel.call_args[0]
+    _event_name, _distinct_id, event_payload = mock_mixpanel.call_args[0]
 
     assert event_payload.get("app name") == "testapp"
     assert event_payload.get("email hash") == "email-hash"
 
 
 @pytest.mark.asyncio
-async def test_missing_authorization_header_returns_401(async_client):
+async def test_missing_authorization_header_returns_401(async_client) -> None:
     """Missing Authorization header should return 401 Unauthorized."""
     response = await async_client.get(
         VECTOR_INFO_ENDPOINT,
@@ -68,7 +70,7 @@ async def test_missing_authorization_header_returns_401(async_client):
         headers=MISSING_AUTH_HEADER,
     )
 
-    assert response.status_code == 401
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
     error_detail = response.json().get("detail", "")
     assert "Not authenticated" in error_detail
 
@@ -85,7 +87,7 @@ async def test_invalid_hdx_token_returns_403(
     mock_run_cmd,
     mock_hdx_client,
     async_client,
-):
+) -> None:
     """Invalid HDX token should return 403 Forbidden."""
     response = await async_client.get(
         VECTOR_INFO_ENDPOINT,
@@ -93,6 +95,6 @@ async def test_invalid_hdx_token_returns_403(
         headers=VALID_AUTH_HEADER,
     )
 
-    assert response.status_code == 403
+    assert response.status_code == status.HTTP_403_FORBIDDEN
     error_detail = response.json().get("detail", "")
     assert error_detail == "Invalid API KEY"

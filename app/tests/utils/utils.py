@@ -1,9 +1,12 @@
+# ruff: noqa: ANN002, ANN003, ARG001, S107
+from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock
 
 
 def create_mock_hdx_response(
     token_name: str = "testapp",
     email_hash: str = "email-hash",
+    *,
     is_success: bool = True,
 ) -> MagicMock:
     """Create a mock HDX response for testing.
@@ -14,7 +17,8 @@ def create_mock_hdx_response(
         is_success: Whether the response represents a successful HDX call
 
     Returns:
-        A MagicMock that behaves like httpx.Response with a json() method and is_success property
+        A MagicMock that behaves like httpx.Response with a json() method and is_success
+        property
 
     """
     response_mock = MagicMock()
@@ -33,12 +37,13 @@ def create_mock_hdx_response(
 def create_mock_hdx_client(
     token_name: str = "testapp",
     email_hash: str = "email-hash",
+    *,
     is_success: bool = True,
-):
+) -> Callable[[], AsyncMock]:
     """Create a mock HDX AsyncClient factory for testing.
 
-    Returns a factory function that creates mock clients compatible with @patch decorator.
-    The returned mock can be used with `async with AsyncClient()` syntax.
+    Returns a factory function that creates mock clients compatible with @patch
+    decorator. The returned mock can be used with `async with AsyncClient()` syntax.
 
     Usage in tests:
         @patch("app.auth.AsyncClient", new_callable=create_mock_hdx_client)
@@ -49,11 +54,12 @@ def create_mock_hdx_client(
         is_success: Whether the HDX authentication succeeds
 
     Returns:
-        A callable factory that returns a mock AsyncClient usable as an async context manager
+        A callable factory that returns a mock AsyncClient usable as an async context
+        manager
 
     """
 
-    def factory(*args, **kwargs):
+    def factory(*args, **kwargs) -> AsyncMock:
         # Create the response mock
         response_mock = create_mock_hdx_response(
             token_name=token_name,
