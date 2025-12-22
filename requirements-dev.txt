@@ -115,7 +115,7 @@ python-json-logger==4.0.0
     # via hdx-geo-data-api
 python-magic==0.4.27
     # via hdx-geo-data-api
-python-multipart==0.0.20
+python-multipart==0.0.21
     # via fastapi
 pyyaml==6.0.3
     # via
